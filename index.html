@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>职场吵架模拟器</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #e8e8e8;
+      color: #333;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* 手机模拟器外壳 */
+    .phone-frame {
+      max-width: 420px;
+      height: 100vh;
+      max-height: 900px;
+      margin: 0 auto;
+      background: #000;
+      border-radius: 40px;
+      padding: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .phone-notch {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 28px;
+      background: #000;
+      border-radius: 0 0 16px 16px;
+      z-index: 100;
+    }
+    .phone-screen {
+      flex: 1;
+      background: #f5f6f8;
+      border-radius: 32px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .page {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .page.active {
+      display: block;
+      animation: pageIn 0.25s ease;
+    }
+    @keyframes pageIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ===== 首页 ===== */
+    #home-page {
+      padding: 40px 16px 24px;
+    }
+    .home-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .home-header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+    .home-header p {
+      font-size: 15px;
+      color: #888;
+    }
+    .scene-list { display: flex; flex-direction: column; gap: 16px; }
+    .scene-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      border-top: 3px solid transparent;
+    }
+    .scene-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    .scene-card .card-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .scene-card .avatar {
+      font-size: 36px;
+      line-height: 1;
+    }
+    .scene-card .name {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .scene-card .desc {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.5;
+      font-style: italic;
+    }
+    .scene-card .start-btn {
+      margin-top: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: right;
+    }
+    .custom-scene {
+      margin-top: 28px;
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      border: 1px dashed #ddd;
+    }
+    .custom-scene h3 {
+      font-size: 17px;
+      margin-bottom: 4px;
+    }
+    .custom-scene .sub {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 12px;
+    }
+    .custom-scene textarea {
+      width: 100%;
+      height: 100px;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 14px;
+      resize: none;
+      font-family: inherit;
+    }
+    .custom-scene textarea:focus {
+      outline: none;
+      border-color: #007aff;
+    }
+    .custom-scene button {
+      margin-top: 12px;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      background: #007aff;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .custom-scene button:active { opacity: 0.85; }
+
+    /* ===== Battle 页 ===== */
+    #battle-page {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: #f5f6f8;
+    }
+    .battle-header {
+      background: #fff;
+      padding: 12px 16px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .battle-header .back {
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .battle-header .title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .battle-header .turn {
+      font-size: 13px;
+      color: #888;
+    }
+    .status-bar {
+      background: #fff;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      border-bottom: 1px solid #eee;
+    }
+    .npc-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .npc-info .avatar {
+      font-size: 40px;
+      line-height: 1;
+    }
+    .npc-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .bar-row .label {
+      font-size: 11px;
+      color: #888;
+      width: 64px;
+      text-align: right;
+    }
+    .progress-bg {
+      width: 100px;
+      height: 8px;
+      background: #eee;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-fg {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+    .progress-fg.breakdown { background: #f44336; }
+    .progress-fg.face { background: #4CAF50; }
+    .progress-fg.bp { background: #9C27B0; }
+    .player-bar {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      border-left: 1px dashed #ddd;
+      padding-left: 12px;
+    }
+    .player-bar .label {
+      font-size: 11px;
+      color: #888;
+    }
+    .player-bar .progress-bg { width: 80px; }
+
+    .chat-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .msg-row {
+      display: flex;
+      margin-bottom: 16px;
+      animation: fadeIn 0.3s ease;
+    }
+    .msg-row.user { justify-content: flex-end; }
+    .msg-row.assistant { justify-content: flex-start; }
+    .bubble {
+      max-width: 78%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      font-size: 15px;
+      line-height: 1.6;
+      word-break: break-word;
+    }
+    .bubble.user {
+      background: #007aff;
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .bubble.assistant {
+      background: #fff;
+      color: #333;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 16px;
+      color: #888;
+      font-size: 14px;
+    }
+    .typing-indicator .dots {
+      display: flex;
+      gap: 3px;
+    }
+    .typing-indicator .dot {
+      width: 6px;
+      height: 6px;
+      background: #bbb;
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+    .typing-indicator .dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-indicator .dot:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .input-area {
+      background: #fff;
+      border-top: 1px solid #eee;
+      padding: 12px 16px;
+      flex-shrink: 0;
+    }
+    .options-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .option-btn {
+      background: #f5f6f8;
+      border: 1px solid #e8e8e8;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 14px;
+      color: #333;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s;
+    }
+    .option-btn:hover { background: #eee; }
+    .option-btn:active { background: #e0e0e0; }
+    .custom-input-row {
+      display: flex;
+      gap: 8px;
+    }
+    .custom-input-row input {
+      flex: 1;
+      border: 1px solid #e0e0e0;
+      border-radius: 20px;
+      padding: 10px 16px;
+      font-size: 15px;
+      font-family: inherit;
+    }
+    .custom-input-row input:focus {
+      outline: none;
+      border-color: #007aff;
+    }
+    .custom-input-row button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 20px;
+      background: #007aff;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .custom-input-row button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    /* ===== 结果页 ===== */
+    #result-page {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+    .result-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 40px 28px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      margin-bottom: 32px;
+    }
+    .result-icon {
+      font-size: 72px;
+      margin-bottom: 16px;
+    }
+    .result-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .result-desc {
+      font-size: 15px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+    .result-stats {
+      display: flex;
+      justify-content: space-around;
+      border-top: 1px solid #eee;
+      padding-top: 24px;
+    }
+    .stat-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .stat-box .label {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 6px;
+    }
+    .stat-box .value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #333;
+    }
+    .result-actions {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .result-actions button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .result-actions .btn-primary {
+      background: #333;
+      color: #fff;
+    }
+    .result-actions .btn-secondary {
+      background: #fff;
+      color: #333;
+      border: 1px solid #ccc;
+    }
+    .result-actions button:active { opacity: 0.85; }
+
+    /* 响应式：真实手机上隐藏模拟器外壳 */
+    @media (max-width: 480px) {
+      html, body { background: #f5f6f8; }
+      .phone-frame {
+        max-width: 100%;
+        height: 100vh;
+        border-radius: 0;
+        padding: 0;
+        box-shadow: none;
+      }
+      .phone-notch { display: none; }
+      .phone-screen { border-radius: 0; }
+      .home-header h1 { font-size: 24px; }
+      .status-bar { padding: 10px 12px; }
+      .progress-bg { width: 80px; }
+      .player-bar .progress-bg { width: 60px; }
+    }
+  </style>
+</head>
+<body>
+<!-- v9 - 手机模拟器框架 + 独立页面路由 -->
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#999;z-index:9999;">v9</div>
+
+<div class="phone-frame">
+  <div class="phone-notch"></div>
+  <div class="phone-screen">
+
+<!-- ===== 首页 ===== -->
+<div id="home-page" class="page active">
+  <div class="home-header">
+    <h1>🤯 职场吵架模拟器</h1>
+    <p>选一个场景，开始你的博弈</p>
+  </div>
+  <div class="scene-list">
+    <div class="scene-card" data-scene="coworker" style="border-top-color:#FF9800">
+      <div class="card-top">
+        <span class="avatar">🤡</span>
+        <span class="name">甩锅型同事</span>
+      </div>
+      <div class="desc">"这事儿我之前跟您提过吧？"</div>
+      <div class="start-btn" style="color:#FF9800">开始推演 ➔</div>
+    </div>
+    <div class="scene-card" data-scene="boss" style="border-top-color:#E91E63">
+      <div class="card-top">
+        <span class="avatar">💼</span>
+        <span class="name">抢功型领导</span>
+      </div>
+      <div class="desc">"这个项目虽然是我主R，但你也出了力。"</div>
+      <div class="start-btn" style="color:#E91E63">开始推演 ➔</div>
+    </div>
+    <div class="scene-card" data-scene="hr" style="border-top-color:#9C27B0">
+      <div class="card-top">
+        <span class="avatar">🐍</span>
+        <span class="name">画饼/和稀泥 HR</span>
+      </div>
+      <div class="desc">"咱们多从'拥抱变化'的角度去想。"</div>
+      <div class="start-btn" style="color:#9C27B0">开始推演 ➔</div>
+    </div>
+  </div>
+  <div class="custom-scene">
+    <h3>🎭 自定义场景</h3>
+    <p class="sub">输入你没吵赢的职场故事，AI 陪你重开一局</p>
+    <textarea id="custom-text" placeholder="例如：今天我做了一天的PPT，结果老板连看都没看就让我重做，还说我没有闭环思维..."></textarea>
+    <button id="start-custom">自定义开局 ➔</button>
+  </div>
+</div>
+
+<!-- ===== Battle 页 ===== -->
+<div id="battle-page" class="page">
+  <div class="battle-header">
+    <span class="back" id="battle-back">←</span>
+    <span class="title" id="battle-title">推演中</span>
+    <span class="turn" id="battle-turn">第 1 回合</span>
+  </div>
+  <div class="status-bar">
+    <div class="npc-info">
+      <span class="avatar" id="npc-avatar">🤡</span>
+      <div class="npc-bars">
+        <div class="bar-row">
+          <span class="label">NPC破防</span>
+          <div class="progress-bg"><div class="progress-fg breakdown" id="bar-breakdown" style="width:0%"></div></div>
+        </div>
+        <div class="bar-row">
+          <span class="label">NPC体面</span>
+          <div class="progress-bg"><div class="progress-fg face" id="bar-face" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="player-bar">
+      <span class="label">我的血压</span>
+      <div class="progress-bg"><div class="progress-fg bp" id="bar-bp" style="width:0%"></div></div>
+    </div>
+  </div>
+  <div class="chat-area" id="chat-area"></div>
+  <div class="input-area">
+    <div class="options-panel" id="options-panel"></div>
+    <div class="custom-input-row">
+      <input type="text" id="free-input" placeholder="自己打字自由发挥..." />
+      <button id="send-btn">发送</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 结果页 ===== -->
+<div id="result-page" class="page">
+  <div class="result-card" id="result-card">
+    <div class="result-icon" id="result-icon">🔥</div>
+    <div class="result-title" id="result-title">NPC 彻底破防！</div>
+    <div class="result-desc" id="result-desc">爽文结局！你精准的痛击让对方哑口无言。</div>
+    <div class="result-stats">
+      <div class="stat-box">
+        <span class="label">NPC破防值</span>
+        <span class="value" id="stat-breakdown">0</span>
+      </div>
+      <div class="stat-box">
+        <span class="label">NPC体面值</span>
+        <span class="value" id="stat-face">0</span>
+      </div>
+      <div class="stat-box">
+        <span class="label">我的血压</span>
+        <span class="value" id="stat-bp">0</span>
+      </div>
+    </div>
+  </div>
+  <div class="result-actions">
+    <button class="btn-primary" id="btn-replay">重新挑战</button>
+    <button class="btn-secondary" id="btn-home">返回首页</button>
+  </div>
+</div>
+
+<script>
+// ========== 配置 ==========
+const API_URL = '/api/chat'; // 相对路径，部署后自动指向同域名下的 /api/chat
+
+// ========== 状态 ==========
+let state = {
+  sceneId: '',
+  customBackground: '',
+  sceneData: null,
+  npcBreakdown: 0,
+  npcFace: 0,
+  playerBP: 0,
+  history: [],
+  isLoading: false
+};
+
+// 核心防御：用于拦截并抛弃所有过期的幽灵请求
+let currentRequestId = 0;
+let lastSubmitTime = 0;  
+let lastRenderedReply = '';
+let isRequesting = false;  // 全局锁：防止并发
+
+const scenes = {
+  coworker: { name: '甩锅型同事', avatar: '🤡', themeColor: '#FF9800' },
+  boss: { name: '抢功型领导', avatar: '💼', themeColor: '#E91E63' },
+  hr: { name: '画饼HR', avatar: '🐍', themeColor: '#9C27B0' },
+  custom: { name: '神秘对手', avatar: '🎭', themeColor: '#607d8b' }
+};
+
+// ========== 页面切换 ==========
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('active');
+    p.scrollTop = 0; // 重置滚动位置
+  });
+  const target = document.getElementById(pageId);
+  target.classList.add('active');
+  target.scrollTop = 0;
+}
+
+// ========== 首页事件 ==========
+document.querySelectorAll('.scene-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const sceneId = card.dataset.scene;
+    startBattle(sceneId);
+  });
+});
+
+document.getElementById('start-custom').addEventListener('click', () => {
+  const text = document.getElementById('custom-text').value.trim();
+  if (!text) {
+    alert('请输入前情提要');
+    return;
+  }
+  startBattle('custom', text);
+});
+
+// ========== Battle 初始化 ==========
+function startBattle(sceneId, customBackground = '') {
+  if (window._loadingTimeout) clearTimeout(window._loadingTimeout);
+  currentRequestId++; // 废弃所有仍在途中的请求
+
+  const sceneData = scenes[sceneId] || scenes.custom;
+  state = {
+    sceneId,
+    customBackground,
+    sceneData,
+    npcBreakdown: 0,
+    npcFace: 0,
+    playerBP: 0,
+    history: [],
+    isLoading: false
+  };
+
+  // UI 初始化
+  document.getElementById('npc-avatar').textContent = sceneData.avatar;
+  document.getElementById('battle-title').textContent = `对战 · ${sceneData.name}`;
+  document.getElementById('battle-turn').textContent = '第 1 回合';
+  document.getElementById('chat-area').innerHTML = '';
+  document.getElementById('options-panel').innerHTML = '';
+  updateBars();
+  showPage('battle-page');
+
+  // 开局：AI 先开口
+  requestAI();
+}
+
+// ========== 更新进度条 ==========
+function updateBars() {
+  document.getElementById('bar-breakdown').style.width = state.npcBreakdown + '%';
+  document.getElementById('bar-face').style.width = state.npcFace + '%';
+  document.getElementById('bar-bp').style.width = state.playerBP + '%';
+  const turn = state.history.filter(m => m.role === 'user').length + 1;
+  document.getElementById('battle-turn').textContent = `第 ${turn} 回合`;
+}
+
+// ========== 添加消息到聊天区 ==========
+function addMessage(role, content) {
+  // 强去重：如果是 NPC 消息，且内容已显示过，则不再添加
+  if (role === 'assistant') {
+    if (content === lastRenderedReply) {
+      console.log('拦截重复 NPC 回复');
+      return;
+    }
+    lastRenderedReply = content;
+  }
+  const chatArea = document.getElementById('chat-area');
+  const row = document.createElement('div');
+  row.className = `msg-row ${role}`;
+  const bubble = document.createElement('div');
+  bubble.className = `bubble ${role}`;
+  bubble.textContent = content;
+  row.appendChild(bubble);
+  chatArea.appendChild(row);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+// ========== 显示/隐藏加载状态 ==========
+// 强制重置：确保 loading 状态和 DOM 完全同步
+function setLoading(loading) {
+  // 强制同步 state
+  state.isLoading = !!loading;
+
+  // 强制操作 DOM（不依赖任何条件判断，避免状态错位）
+  const sendBtn = document.getElementById('send-btn');
+  const freeInput = document.getElementById('free-input');
+  const chatArea = document.getElementById('chat-area');
+
+  if (loading) {
+    // 显示 loading 指示器
+    let loadingEl = document.getElementById('loading-indicator');
+    if (!loadingEl) {
+      loadingEl = document.createElement('div');
+      loadingEl.id = 'loading-indicator';
+      loadingEl.className = 'typing-indicator';
+      loadingEl.innerHTML = '<span>对方正在输入</span><span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>';
+      chatArea.appendChild(loadingEl);
+    }
+    loadingEl.style.display = 'flex';
+    // 滚动到底部让 loading 可见
+    chatArea.scrollTop = chatArea.scrollHeight;
+  } else {
+    // 强制隐藏 loading（即使不存在也无所谓）
+    const loadingEl = document.getElementById('loading-indicator');
+    if (loadingEl) loadingEl.remove();
+  }
+
+  // 强制设置按钮状态（不依赖 state）
+  if (sendBtn) sendBtn.disabled = !!loading;
+  if (freeInput) freeInput.disabled = !!loading;
+
+  // 不再 focus 输入框，避免在某些手机上弹出键盘干扰用户
+  // if (!loading && freeInput) freeInput.focus();
+}
+
+// ========== 渲染快捷选项 ==========
+function renderOptions(options) {
+  const panel = document.getElementById('options-panel');
+  panel.innerHTML = '';
+
+  // 如果选项为空，用兜底选项
+  let opts = (Array.isArray(options) && options.length > 0) ? options : [
+    { text: "（忍让）你说的有道理，我再想想。", type: "忍让" },
+    { text: "（高情商）我理解你的意思，我们换个角度看。", type: "高情商" },
+    { text: "（硬刚）你这话说得不对，我不同意。", type: "硬刚" }
+  ];
+
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = opt.text;
+    btn.addEventListener('click', () => submitPlayerTurn(opt.text));
+    panel.appendChild(btn);
+  });
+}
+
+// ========== 玩家提交 ==========
+function submitPlayerTurn(text) {
+  if (state.isLoading) return;
+  if (isRequesting) return;  // 有请求在执行中，忽略
+  const now = Date.now();
+  if (now - lastSubmitTime < 500) return;
+  lastSubmitTime = now;
+
+  addMessage('user', text);
+  state.history.push({ role: 'user', content: text });
+  document.getElementById('options-panel').innerHTML = '';
+
+  if (window._loadingTimeout) clearTimeout(window._loadingTimeout);
+  window._loadingTimeout = setTimeout(() => {
+    if (state.isLoading) {
+      currentRequestId++; // 触发超时，强杀当前请求
+      console.warn('30秒超时，强制解锁');
+      setLoading(false);
+      isRequesting = false;
+      const optionsPanel = document.getElementById('options-panel');
+      optionsPanel.innerHTML = '<button class="option-btn" onclick="retryLastRequest()" style="text-align:center;color:#007aff;border-color:#007aff;">网络超时，点击重试</button>';
+    }
+  }, 30000);
+
+  requestAI();
+}
+
+// ========== 调用 AI ==========
+async function requestAI() {
+  // 全局锁：防止并发
+  if (isRequesting) return;
+  isRequesting = true;
+
+  // 签发本次请求的唯一 ID
+  const reqId = ++currentRequestId;
+  setLoading(true);
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sceneId: state.sceneId,
+        customBackground: state.customBackground,
+        history: state.history
+      })
+    });
+
+    // 幽灵请求检查
+    if (reqId !== currentRequestId) { isRequesting = false; return; }
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+
+    if (data.error) {
+      alert(data.error);
+      throw new Error(data.error);
+    }
+
+    const { npcReply, statChanges, suggestedOptions } = data;
+
+    // 添加到聊天记录
+    if (npcReply) {
+      addMessage('assistant', npcReply);
+      state.history.push({ role: 'assistant', content: npcReply });
+    }
+
+    // 更新数值
+    state.npcBreakdown = Math.min(100, state.npcBreakdown + Math.max(0, statChanges?.breakdown || 0));
+    state.npcFace = Math.min(100, state.npcFace + Math.max(0, statChanges?.face || 0));
+    state.playerBP = Math.min(100, state.playerBP + Math.max(0, statChanges?.bp || 0));
+    updateBars();
+
+    // 检查熔断
+    if (state.npcBreakdown >= 100 || state.npcFace >= 100 || state.playerBP >= 100) {
+      setLoading(false);
+      isRequesting = false;
+      setTimeout(() => showResult(), 800);
+      return;
+    }
+
+    // 渲染选项（空数组时 renderOptions 内部有兜底）
+    let opts = Array.isArray(suggestedOptions) ? suggestedOptions : [];
+    renderOptions(opts);
+    setLoading(false);
+    isRequesting = false;
+
+  } catch (err) {
+    if (reqId !== currentRequestId) { isRequesting = false; return; }
+    
+    setLoading(false);
+    isRequesting = false;
+    const optionsPanel = document.getElementById('options-panel');
+    optionsPanel.innerHTML = '<button class="option-btn" onclick="retryLastRequest()" style="text-align:center;color:#007aff;border-color:#007aff;">网络出了点问题，点击重试</button>';
+  } finally {
+    if (reqId === currentRequestId && window._loadingTimeout) {
+      clearTimeout(window._loadingTimeout);
+    }
+  }
+}
+
+// 重试上一次请求
+function retryLastRequest() {
+  if (state.isLoading) return;
+  isRequesting = false;  // 解锁
+  requestAI();
+}
+
+// ========== 显示结果 ==========
+function showResult() {
+  const { npcBreakdown, npcFace, playerBP } = state;
+  let icon, title, desc, bgColor;
+
+  if (playerBP >= 100) {
+    icon = '💢'; title = '血压爆表，内耗失败';
+    desc = '你被气得浑身发抖，晚上躺在床上都在想白天没发挥好的那句话。';
+    bgColor = '#f3e5f5';
+  } else if (npcBreakdown >= 100) {
+    icon = '🔥'; title = 'NPC 彻底破防！';
+    desc = '爽文结局！你精准的痛击让对方哑口无言，当场心态崩溃。';
+    bgColor = '#ffebee';
+  } else {
+    icon = '💼'; title = '专业致胜，体面人';
+    desc = '你没有情绪失控，而是用极其专业的态度和流程，让对方无话可说。';
+    bgColor = '#e8f5e9';
+  }
+
+  document.getElementById('result-icon').textContent = icon;
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-desc').textContent = desc;
+  document.getElementById('result-card').style.background = bgColor;
+  document.getElementById('stat-breakdown').textContent = npcBreakdown;
+  document.getElementById('stat-face').textContent = npcFace;
+  document.getElementById('stat-bp').textContent = playerBP;
+
+  showPage('result-page');
+}
+
+// ========== 结果页事件 ==========
+document.getElementById('btn-replay').addEventListener('click', () => {
+  startBattle(state.sceneId, state.customBackground);
+});
+
+document.getElementById('btn-home').addEventListener('click', () => {
+  showPage('home-page');
+});
+
+// ========== Battle 页事件 ==========
+document.getElementById('battle-back').addEventListener('click', () => {
+  if (confirm('确定要退出当前推演吗？')) {
+    showPage('home-page');
+  }
+});
+
+document.getElementById('send-btn').addEventListener('click', () => {
+  const input = document.getElementById('free-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  submitPlayerTurn(text);
+});
+
+document.getElementById('free-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    document.getElementById('send-btn').click();
+  }
+});
+</script>
+
+  </div>
+</div>
+
+</body>
+</html>
