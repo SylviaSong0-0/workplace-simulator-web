@@ -382,12 +382,10 @@
 
     /* ========== 结果页：在手机屏幕内覆盖 ========== */
     #result-page {
-      display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 40px 20px;
-      flex: 1;
     }
     .result-card {
       background: #fff;
@@ -484,11 +482,11 @@
   </style>
 </head>
 <body>
-<!-- v13 - 结果页放回手机屏幕内 -->
+<!-- v14 - 修复结果页CSS优先级与HTML嵌套 -->
 
 <div class="phone-frame">
   <div class="phone-screen">
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v13</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v14</div>
 
 <!-- ===== 首页 ===== -->
 <div id="home-page" class="page active">
@@ -566,9 +564,6 @@
   </div>
 </div>
 
-  </div>
-</div>
-
 <!-- ===== 结果页：在手机屏幕内覆盖 ===== -->
   <div id="result-page" class="page">
     <div class="result-card" id="result-card">
@@ -596,7 +591,7 @@
     </div>
   </div>
 
-</div>
+  </div>
 </div>
 
 <script>
