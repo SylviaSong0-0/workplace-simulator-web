@@ -482,11 +482,11 @@
   </style>
 </head>
 <body>
-<!-- v14 - 修复结果页CSS优先级与HTML嵌套 -->
+<!-- v15 - 强制首页显示 + 防止缓存旧页面状态 -->
 
 <div class="phone-frame">
   <div class="phone-screen">
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v14</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v15</div>
 
 <!-- ===== 首页 ===== -->
 <div id="home-page" class="page active">
@@ -595,6 +595,13 @@
 </div>
 
 <script>
+// ========== 初始化：强制显示首页（防止任何缓存或状态错乱） ==========
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const home = document.getElementById('home-page');
+  if (home) home.classList.add('active');
+});
+
 // ========== 配置 ==========
 const API_URL = '/api/chat'; // 相对路径，部署后自动指向同域名下的 /api/chat
 
