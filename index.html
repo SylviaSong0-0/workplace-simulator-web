@@ -9,69 +9,21 @@
   <title>职场吵架模拟器</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body {
+    body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background: #e8e8e8;
-      color: #333;
-      height: 100%;
-      overflow: hidden;
-    }
-
-    /* 手机模拟器外壳 */
-    .phone-frame {
-      max-width: 420px;
-      height: 100vh;
-      max-height: 900px;
-      margin: 0 auto;
-      background: #000;
-      border-radius: 40px;
-      padding: 12px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      position: relative;
-      display: flex;
-      flex-direction: column;
-    }
-    .phone-notch {
-      position: absolute;
-      top: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 120px;
-      height: 28px;
-      background: #000;
-      border-radius: 0 0 16px 16px;
-      z-index: 100;
-    }
-    .phone-screen {
-      flex: 1;
       background: #f5f6f8;
-      border-radius: 32px;
-      overflow: hidden;
-      position: relative;
+      color: #333;
+      min-height: 100vh;
+      overflow-x: hidden;
     }
-
-    .page {
-      display: none;
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-    .page.active {
-      display: block;
-      animation: pageIn 0.25s ease;
-    }
-    @keyframes pageIn {
-      from { opacity: 0; transform: translateX(20px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
+    .page { display: none; }
+    .page.active { display: block; }
 
     /* ===== 首页 ===== */
     #home-page {
-      padding: 40px 16px 24px;
+      padding: 40px 20px;
+      max-width: 480px;
+      margin: 0 auto;
     }
     .home-header {
       text-align: center;
@@ -176,7 +128,9 @@
     #battle-page {
       display: flex;
       flex-direction: column;
-      height: 100%;
+      height: 100vh;
+      max-width: 600px;
+      margin: 0 auto;
       background: #f5f6f8;
     }
     .battle-header {
@@ -386,11 +340,14 @@
 
     /* ===== 结果页 ===== */
     #result-page {
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 40px 16px;
+      padding: 40px 20px;
+      max-width: 480px;
+      margin: 0 auto;
     }
     .result-card {
       background: #fff;
@@ -463,18 +420,8 @@
     }
     .result-actions button:active { opacity: 0.85; }
 
-    /* 响应式：真实手机上隐藏模拟器外壳 */
-    @media (max-width: 480px) {
-      html, body { background: #f5f6f8; }
-      .phone-frame {
-        max-width: 100%;
-        height: 100vh;
-        border-radius: 0;
-        padding: 0;
-        box-shadow: none;
-      }
-      .phone-notch { display: none; }
-      .phone-screen { border-radius: 0; }
+    /* 响应式 */
+    @media (max-width: 400px) {
       .home-header h1 { font-size: 24px; }
       .status-bar { padding: 10px 12px; }
       .progress-bg { width: 80px; }
@@ -483,12 +430,8 @@
   </style>
 </head>
 <body>
-<!-- v9 - 手机模拟器框架 + 独立页面路由 -->
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#999;z-index:9999;">v9</div>
-
-<div class="phone-frame">
-  <div class="phone-notch"></div>
-  <div class="phone-screen">
+<!-- v10 - 回滚到简洁布局 + 保留功能修复 -->
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;z-index:9999;">v10</div>
 
 <!-- ===== 首页 ===== -->
 <div id="home-page" class="page active">
@@ -624,13 +567,9 @@ const scenes = {
 
 // ========== 页面切换 ==========
 function showPage(pageId) {
-  document.querySelectorAll('.page').forEach(p => {
-    p.classList.remove('active');
-    p.scrollTop = 0; // 重置滚动位置
-  });
-  const target = document.getElementById(pageId);
-  target.classList.add('active');
-  target.scrollTop = 0;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  window.scrollTo(0, 0);
 }
 
 // ========== 首页事件 ==========
@@ -940,9 +879,6 @@ document.getElementById('free-input').addEventListener('keydown', (e) => {
   }
 });
 </script>
-
-  </div>
-</div>
 
 </body>
 </html>
