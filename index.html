@@ -169,7 +169,7 @@
     .custom-scene button:active { opacity: 0.85; }
 
     /* ========== Battle 页 ========== */
-    #battle-page {
+    #battle-page.active {
       display: flex;
       flex-direction: column;
       height: 100%;
@@ -482,11 +482,11 @@
   </style>
 </head>
 <body>
-<!-- v15 - 强制首页显示 + 防止缓存旧页面状态 -->
+<!-- v16 - Battle页样式改为#battle-page.active -->
 
 <div class="phone-frame">
   <div class="phone-screen">
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v15</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v16</div>
 
 <!-- ===== 首页 ===== -->
 <div id="home-page" class="page active">
