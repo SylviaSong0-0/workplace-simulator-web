@@ -9,21 +9,65 @@
   <title>职场吵架模拟器</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
+    html, body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background: #f5f6f8;
+      background: #1a1a2e;
       color: #333;
-      min-height: 100vh;
-      overflow-x: hidden;
+      height: 100%;
+      overflow: hidden;
     }
-    .page { display: none; }
-    .page.active { display: block; }
 
-    /* ===== 首页 ===== */
+    /* ========== 电脑端：手机模拟器外壳 ========== */
+    .phone-frame {
+      position: relative;
+      width: 390px;
+      height: 844px;
+      margin: 20px auto;
+      background: #000;
+      border-radius: 50px;
+      padding: 14px;
+      box-shadow: 0 0 0 2px #333, 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .phone-frame::before {
+      content: '';
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 126px;
+      height: 34px;
+      background: #000;
+      border-radius: 0 0 20px 20px;
+      z-index: 100;
+    }
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      background: #f5f6f8;
+      border-radius: 38px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ========== 页面切换 ========== */
+    .page {
+      display: none;
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .page.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ========== 首页 ========== */
     #home-page {
-      padding: 40px 20px;
-      max-width: 480px;
-      margin: 0 auto;
+      padding: 50px 20px 24px;
+      flex: 1;
     }
     .home-header {
       text-align: center;
@@ -124,13 +168,11 @@
     }
     .custom-scene button:active { opacity: 0.85; }
 
-    /* ===== Battle 页 ===== */
+    /* ========== Battle 页 ========== */
     #battle-page {
       display: flex;
       flex-direction: column;
-      height: 100vh;
-      max-width: 600px;
-      margin: 0 auto;
+      height: 100%;
       background: #f5f6f8;
     }
     .battle-header {
@@ -338,16 +380,14 @@
       cursor: not-allowed;
     }
 
-    /* ===== 结果页 ===== */
+    /* ========== 结果页 ========== */
     #result-page {
-      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 40px 20px;
-      max-width: 480px;
-      margin: 0 auto;
+      flex: 1;
     }
     .result-card {
       background: #fff;
@@ -420,7 +460,21 @@
     }
     .result-actions button:active { opacity: 0.85; }
 
-    /* 响应式 */
+    /* ========== 响应式：真机全屏 ========== */
+    @media (max-width: 480px) {
+      html, body { background: #f5f6f8; }
+      .phone-frame {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        border-radius: 0;
+        padding: 0;
+        box-shadow: none;
+      }
+      .phone-frame::before { display: none; }
+      .phone-screen { border-radius: 0; }
+      #home-page { padding-top: 30px; }
+    }
     @media (max-width: 400px) {
       .home-header h1 { font-size: 24px; }
       .status-bar { padding: 10px 12px; }
@@ -430,8 +484,11 @@
   </style>
 </head>
 <body>
-<!-- v10 - 回滚到简洁布局 + 保留功能修复 -->
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;z-index:9999;">v10</div>
+<!-- v11 - 手机模拟器框架 -->
+
+<div class="phone-frame">
+  <div class="phone-screen">
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v11</div>
 
 <!-- ===== 首页 ===== -->
 <div id="home-page" class="page active">
@@ -567,9 +624,12 @@ const scenes = {
 
 // ========== 页面切换 ==========
 function showPage(pageId) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('active');
+    p.scrollTop = 0;
+  });
   document.getElementById(pageId).classList.add('active');
-  window.scrollTo(0, 0);
+  document.getElementById(pageId).scrollTop = 0;
 }
 
 // ========== 首页事件 ==========
@@ -880,5 +940,7 @@ document.getElementById('free-input').addEventListener('keydown', (e) => {
 });
 </script>
 
+  </div>
+</div>
 </body>
 </html>
