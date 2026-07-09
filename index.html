@@ -168,6 +168,144 @@
     }
     .custom-scene button:active { opacity: 0.85; }
 
+    /* ========== 准备页 ========== */
+    #prep-page {
+      padding: 0;
+      background: #f5f6f8;
+    }
+    .prep-hero {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 40px 24px 28px;
+      color: #fff;
+      position: relative;
+    }
+    .prep-hero.coworker { background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); }
+    .prep-hero.boss { background: linear-gradient(135deg, #E91E63 0%, #C2185B 100%); }
+    .prep-hero.hr { background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%); }
+    .prep-hero.custom { background: linear-gradient(135deg, #607d8b 0%, #455a64 100%); }
+    .prep-hero .back-btn {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      font-size: 22px;
+      cursor: pointer;
+      color: #fff;
+      opacity: 0.9;
+    }
+    .prep-hero .scene-label {
+      font-size: 13px;
+      opacity: 0.85;
+      margin-bottom: 6px;
+    }
+    .prep-hero h2 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .prep-hero .vs-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .prep-hero .vs-side {
+      flex: 1;
+      text-align: center;
+    }
+    .prep-hero .vs-avatar {
+      font-size: 48px;
+      margin-bottom: 6px;
+      line-height: 1;
+    }
+    .prep-hero .vs-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .prep-hero .vs-role {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-top: 2px;
+    }
+    .prep-hero .vs-divider {
+      font-size: 20px;
+      font-weight: 700;
+      opacity: 0.7;
+    }
+    .prep-content {
+      padding: 20px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .prep-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .prep-info-item {
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .prep-info-item .info-label {
+      font-size: 11px;
+      color: #999;
+      margin-bottom: 4px;
+    }
+    .prep-info-item .info-value {
+      font-size: 13px;
+      color: #333;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+    .prep-section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .prep-section .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .prep-section .section-body {
+      font-size: 14px;
+      color: #555;
+      line-height: 1.7;
+    }
+    .prep-tip {
+      background: #fff8e1;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 12px;
+      color: #f57c00;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .prep-start-btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 14px;
+      background: #333;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+    .prep-start-btn:active { opacity: 0.85; }
+    .prep-start-btn.loading {
+      background: #999;
+      pointer-events: none;
+    }
+
     /* ========== Battle 页 ========== */
     #battle-page.active {
       display: flex;
@@ -482,7 +620,7 @@
   </style>
 </head>
 <body>
-<!-- v17 - 重写打分规则prompt -->
+<!-- v17 - 新增场景准备页，完善前情提要 -->
 
 <div class="phone-frame">
   <div class="phone-screen">
@@ -525,6 +663,60 @@
     <p class="sub">输入你没吵赢的职场故事，AI 陪你重开一局</p>
     <textarea id="custom-text" placeholder="例如：今天我做了一天的PPT，结果老板连看都没看就让我重做，还说我没有闭环思维..."></textarea>
     <button id="start-custom">自定义开局 ➔</button>
+  </div>
+</div>
+
+<!-- ===== 准备页 ===== -->
+<div id="prep-page" class="page">
+  <div class="prep-hero" id="prep-hero">
+    <span class="back-btn" id="prep-back">←</span>
+    <div class="scene-label" id="prep-scene-label">职场博弈</div>
+    <h2 id="prep-title">场景标题</h2>
+    <div class="vs-row">
+      <div class="vs-side">
+        <div class="vs-avatar">🧑‍💻</div>
+        <div class="vs-name">你</div>
+        <div class="vs-role" id="prep-player-role">打工人</div>
+      </div>
+      <div class="vs-divider">VS</div>
+      <div class="vs-side">
+        <div class="vs-avatar" id="prep-npc-avatar">🤡</div>
+        <div class="vs-name" id="prep-npc-name">对手</div>
+        <div class="vs-role" id="prep-npc-role">身份</div>
+      </div>
+    </div>
+  </div>
+  <div class="prep-content">
+    <div class="prep-info-grid">
+      <div class="prep-info-item">
+        <div class="info-label">🕐 时间</div>
+        <div class="info-value" id="prep-time">—</div>
+      </div>
+      <div class="prep-info-item">
+        <div class="info-label">📍 地点</div>
+        <div class="info-value" id="prep-location">—</div>
+      </div>
+      <div class="prep-info-item">
+        <div class="info-label">👥 在场人物</div>
+        <div class="info-value" id="prep-people">—</div>
+      </div>
+      <div class="prep-info-item">
+        <div class="info-label">⚡ 难度</div>
+        <div class="info-value" id="prep-difficulty">—</div>
+      </div>
+    </div>
+    <div class="prep-section">
+      <div class="section-title">📜 前情提要</div>
+      <div class="section-body" id="prep-background">—</div>
+    </div>
+    <div class="prep-section">
+      <div class="section-title">🎯 你的目标</div>
+      <div class="section-body" id="prep-goal">—</div>
+    </div>
+    <div class="prep-tip">
+      💡 提示：你可以选择忍让、高情商应对，或者直接硬刚。不同的选择会影响NPC的破防值、体面值和你的血压值。
+    </div>
+    <button class="prep-start-btn" id="prep-start-btn">进入战场 ⚔️</button>
   </div>
 </div>
 
@@ -624,10 +816,62 @@ let lastRenderedReply = '';
 let isRequesting = false;  // 全局锁：防止并发
 
 const scenes = {
-  coworker: { name: '甩锅型同事', avatar: '🤡', themeColor: '#FF9800' },
-  boss: { name: '抢功型领导', avatar: '💼', themeColor: '#E91E63' },
-  hr: { name: '画饼HR', avatar: '🐍', themeColor: '#9C27B0' },
-  custom: { name: '神秘对手', avatar: '🎭', themeColor: '#607d8b' }
+  coworker: {
+    name: '甩锅型同事',
+    avatar: '🤡',
+    themeColor: '#FF9800',
+    title: '线上事故复盘会',
+    playerRole: '项目核心开发',
+    npcRole: '老油条同事',
+    time: '周三下午 3:00',
+    location: '公司小会议室',
+    people: '你、同事、组长',
+    difficulty: '⭐⭐⭐',
+    background: '线上出了一个紧急bug，客户投诉到了总监那里。组长拉了紧急复盘会。你昨晚加班到10点，已经定位到是这位同事负责的模块出了问题——他改了配置但没通知任何人。但你知道，这人出了名的会甩锅，会上肯定要反咬一口...',
+    goal: '在组长面前澄清事实，让这位同事为自己的失误负责，同时不能显得你在推卸责任。'
+  },
+  boss: {
+    name: '抢功型领导',
+    avatar: '💼',
+    themeColor: '#E91E63',
+    title: '项目功劳被抢',
+    playerRole: '部门骨干员工',
+    npcRole: '直属领导',
+    time: '周五下午 4:30',
+    location: '领导办公室',
+    people: '你、你的领导',
+    difficulty: '⭐⭐⭐⭐',
+    background: '你熬了三个通宵做的项目方案，被领导拿去在大老板面前汇报，说是他自己"闭关一周想出来的"。大老板非常满意，当场说要重点"培养"他。你在下面听得拳头都攥紧了。散会后你决定去找领导谈谈...',
+    goal: '既要回属于自己的功劳，又不能让领导觉得你在挑战他的权威。'
+  },
+  hr: {
+    name: '画饼/和稀泥 HR',
+    avatar: '🐍',
+    themeColor: '#9C27B0',
+    title: '绩效面谈',
+    playerRole: '入职两年老员工',
+    npcRole: 'HRBP（笑面虎）',
+    time: '周一上午 10:00',
+    location: 'HR 面谈室',
+    people: '你、HR',
+    difficulty: '⭐⭐⭐⭐⭐',
+    background: '你去年绩效是A，加班最多，项目完成度最高，本以为今年稳涨薪。结果HR找你"一对一谈心"，说公司今年"遇到了一些挑战"，涨薪暂缓，但是给你"更大的成长空间"和"更重要的职责"。你一听就知道是被画饼了...',
+    goal: '争取到应得的涨薪，或者至少套出真实原因，别被"拥抱变化"四个字打发了。'
+  },
+  custom: {
+    name: '自定义场景',
+    avatar: '🎭',
+    themeColor: '#607d8b',
+    title: '自定义对局',
+    playerRole: '打工人',
+    npcRole: '神秘对手',
+    time: '—',
+    location: '—',
+    people: '—',
+    difficulty: '?',
+    background: '',
+    goal: '根据你输入的场景，自由发挥！'
+  }
 };
 
 // ========== 页面切换 ==========
@@ -644,7 +888,7 @@ function showPage(pageId) {
 document.querySelectorAll('.scene-card').forEach(card => {
   card.addEventListener('click', () => {
     const sceneId = card.dataset.scene;
-    startBattle(sceneId);
+    showPrepPage(sceneId);
   });
 });
 
@@ -654,19 +898,137 @@ document.getElementById('start-custom').addEventListener('click', () => {
     alert('请输入前情提要');
     return;
   }
-  startBattle('custom', text);
+  showCustomPrepPage(text);
+});
+
+// ========== 准备页：固定场景 ==========
+function showPrepPage(sceneId) {
+  const sceneData = scenes[sceneId] || scenes.custom;
+  renderPrepPage(sceneId, sceneData, null);
+  showPage('prep-page');
+}
+
+// ========== 准备页：自定义场景（调用AI分析） ==========
+async function showCustomPrepPage(customBackground) {
+  // 先显示一个 loading 状态的准备页
+  const loadingScene = {
+    ...scenes.custom,
+    background: '正在分析你的场景，请稍候...',
+    title: '场景生成中...'
+  };
+  renderPrepPage('custom', loadingScene, null);
+  showPage('prep-page');
+
+  const startBtn = document.getElementById('prep-start-btn');
+  startBtn.classList.add('loading');
+  startBtn.textContent = 'AI 正在构建场景...';
+
+  try {
+    const res = await fetch('/api/scene-setup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customBackground })
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+
+    // 构建自定义场景数据
+    const customSceneData = {
+      name: data.npcName || '职场对手',
+      avatar: data.npcAvatar || '🎭',
+      themeColor: '#607d8b',
+      title: data.title || '自定义对局',
+      playerRole: data.playerRole || '打工人',
+      npcRole: data.npcRole || '未知身份',
+      time: data.time || '工作时间',
+      location: data.location || '公司',
+      people: data.people || '你、对手',
+      difficulty: data.difficulty || '⭐⭐⭐',
+      background: data.background || customBackground,
+      goal: data.goal || '根据现场情况，随机应变！',
+      sceneType: data.sceneType || 'custom',
+      customPersona: data.persona || null
+    };
+
+    renderPrepPage(data.sceneType || 'custom', customSceneData, customBackground);
+  } catch (err) {
+    console.error('场景分析失败:', err);
+    // 失败时用兜底数据
+    const fallbackScene = {
+      ...scenes.custom,
+      background: customBackground,
+      title: '自定义对局'
+    };
+    renderPrepPage('custom', fallbackScene, customBackground);
+  } finally {
+    startBtn.classList.remove('loading');
+    startBtn.textContent = '进入战场 ⚔️';
+  }
+}
+
+// ========== 渲染准备页 ==========
+let currentPrepData = null; // 保存当前准备页数据，用于开始对战
+
+function renderPrepPage(sceneType, sceneData, customBackground) {
+  currentPrepData = {
+    sceneType,
+    sceneData,
+    customBackground: customBackground || ''
+  };
+
+  const hero = document.getElementById('prep-hero');
+  hero.className = 'prep-hero ' + sceneType;
+
+  document.getElementById('prep-scene-label').textContent = '职场博弈';
+  document.getElementById('prep-title').textContent = sceneData.title || sceneData.name;
+  document.getElementById('prep-player-role').textContent = sceneData.playerRole || '打工人';
+  document.getElementById('prep-npc-avatar').textContent = sceneData.avatar || '🎭';
+  document.getElementById('prep-npc-name').textContent = sceneData.name || '对手';
+  document.getElementById('prep-npc-role').textContent = sceneData.npcRole || '身份';
+  document.getElementById('prep-time').textContent = sceneData.time || '—';
+  document.getElementById('prep-location').textContent = sceneData.location || '—';
+  document.getElementById('prep-people').textContent = sceneData.people || '—';
+  document.getElementById('prep-difficulty').textContent = sceneData.difficulty || '—';
+  document.getElementById('prep-background').textContent = sceneData.background || '—';
+  document.getElementById('prep-goal').textContent = sceneData.goal || '—';
+}
+
+// ========== 准备页事件 ==========
+document.getElementById('prep-back').addEventListener('click', () => {
+  showPage('home-page');
+});
+
+document.getElementById('prep-start-btn').addEventListener('click', () => {
+  if (!currentPrepData) return;
+  const btn = document.getElementById('prep-start-btn');
+  if (btn.classList.contains('loading')) return;
+
+  startBattle(
+    currentPrepData.sceneType,
+    currentPrepData.customBackground,
+    currentPrepData.sceneData
+  );
 });
 
 // ========== Battle 初始化 ==========
-function startBattle(sceneId, customBackground = '') {
+function startBattle(sceneId, customBackground = '', sceneDataOverride = null) {
   if (window._loadingTimeout) clearTimeout(window._loadingTimeout);
   currentRequestId++; // 废弃所有仍在途中的请求
 
-  const sceneData = scenes[sceneId] || scenes.custom;
+  const sceneData = sceneDataOverride || scenes[sceneId] || scenes.custom;
+
+  // 如果是固定场景，把预设的背景故事也传给后端，让 NPC 对话更贴合场景
+  const finalBackground = customBackground || sceneData.background || '';
+
   state = {
     sceneId,
-    customBackground,
+    customBackground: finalBackground,
     sceneData,
+    customPersona: sceneData.customPersona || null, // 自定义场景的 persona
     npcBreakdown: 0,
     npcFace: 0,
     playerBP: 0,
@@ -820,6 +1182,7 @@ async function requestAI() {
       body: JSON.stringify({
         sceneId: state.sceneId,
         customBackground: state.customBackground,
+        customPersona: state.customPersona,
         history: state.history
       })
     });
@@ -919,7 +1282,8 @@ function showResult() {
 
 // ========== 结果页事件 ==========
 document.getElementById('btn-replay').addEventListener('click', () => {
-  startBattle(state.sceneId, state.customBackground);
+  // 使用保存的完整场景数据重新开始
+  startBattle(state.sceneId, state.customBackground, state.sceneData);
 });
 
 document.getElementById('btn-home').addEventListener('click', () => {
