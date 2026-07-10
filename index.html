@@ -487,6 +487,82 @@
     }
     .option-btn:hover { background: #eee; }
     .option-btn:active { background: #e0e0e0; }
+    .option-btn .opt-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .option-btn .opt-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .opt-tag.tag-defend { background: #e8f5e9; color: #388E3C; }
+    .opt-tag.tag-diplomat { background: #e3f2fd; color: #1565C0; }
+    .opt-tag.tag-strike { background: #fce4ec; color: #C62828; }
+    .opt-tag.tag-finisher { background: #fff8e1; color: #F57F17; border: 1px solid #FBC02D; }
+    .option-btn .opt-desc {
+      font-size: 12px;
+      color: #999;
+    }
+    .option-btn .opt-text {
+      font-size: 14px;
+      color: #333;
+      line-height: 1.4;
+    }
+
+    /* ========== 系统观察气泡 ========== */
+    .msg-row.system {
+      justify-content: center;
+    }
+    .bubble.system {
+      max-width: 90%;
+      background: #f5f6f8;
+      color: #888;
+      font-size: 12px;
+      border: 1px dashed #ddd;
+      border-radius: 99px;
+      padding: 6px 14px;
+      box-shadow: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .bubble.system .eye-icon { font-size: 13px; }
+
+    /* ========== 破防状态 ========== */
+    .break-badge {
+      display: none;
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: #facc15;
+      color: #333;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 99px;
+      border: 2px solid #333;
+      transform: rotate(8deg);
+      animation: pulse-badge 1.5s infinite;
+      z-index: 20;
+    }
+    .break-badge.visible { display: block; }
+    @keyframes pulse-badge {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(250,204,21,0.5); }
+      50% { box-shadow: 0 0 0 6px rgba(250,204,21,0); }
+    }
+    .npc-info { position: relative; }
+    .break-flash { animation: shake-npc 0.4s ease-in-out; }
+    @keyframes shake-npc {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-3px) rotate(-1deg); }
+      75% { transform: translateX(3px) rotate(1deg); }
+    }
     .custom-input-row {
       display: flex;
       gap: 8px;
@@ -620,11 +696,11 @@
   </style>
 </head>
 <body>
-<!-- v17 - 新增场景准备页，完善前情提要 -->
+<!-- v18 - 系统观察提示 + 选项卡片升级 + 破防状态 -->
 
 <div class="phone-frame">
   <div class="phone-screen">
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v17</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v18</div>
 
 <!-- ===== 首页 ===== -->
 <div id="home-page" class="page active">
@@ -730,6 +806,7 @@
   <div class="status-bar">
     <div class="npc-info">
       <span class="avatar" id="npc-avatar">🤡</span>
+      <span class="break-badge" id="break-badge">BREAK!</span>
       <div class="npc-bars">
         <div class="bar-row">
           <span class="label">NPC破防</span>
@@ -1061,6 +1138,16 @@ function updateBars() {
   document.getElementById('bar-bp').style.width = state.playerBP + '%';
   const turn = state.history.filter(m => m.role === 'user').length + 1;
   document.getElementById('battle-turn').textContent = `第 ${turn} 回合`;
+
+  // 破防状态检测
+  const breakBadge = document.getElementById('break-badge');
+  if (breakBadge) {
+    if (state.npcBreakdown >= 80) {
+      breakBadge.classList.add('visible');
+    } else {
+      breakBadge.classList.remove('visible');
+    }
+  }
 }
 
 // ========== 添加消息到聊天区 ==========
@@ -1079,6 +1166,20 @@ function addMessage(role, content) {
   const bubble = document.createElement('div');
   bubble.className = `bubble ${role}`;
   bubble.textContent = content;
+  row.appendChild(bubble);
+  chatArea.appendChild(row);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+// ========== 添加系统观察 ==========
+function addObservation(text) {
+  if (!text) return;
+  const chatArea = document.getElementById('chat-area');
+  const row = document.createElement('div');
+  row.className = 'msg-row system';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble system';
+  bubble.innerHTML = '<span class="eye-icon">👁️</span> ' + text;
   row.appendChild(bubble);
   chatArea.appendChild(row);
   chatArea.scrollTop = chatArea.scrollHeight;
@@ -1127,17 +1228,40 @@ function renderOptions(options) {
   const panel = document.getElementById('options-panel');
   panel.innerHTML = '';
 
+  // 判断是否处于破防状态
+  const isBreakState = state.npcBreakdown >= 80;
+
   // 如果选项为空，用兜底选项
   let opts = (Array.isArray(options) && options.length > 0) ? options : [
-    { text: "（忍让）你说的有道理，我再想想。", type: "忍让" },
-    { text: "（高情商）我理解你的意思，我们换个角度看。", type: "高情商" },
-    { text: "（硬刚）你这话说得不对，我不同意。", type: "硬刚" }
+    { text: "（忍让）你说的有道理，我再想想。", type: "忍让", desc: "先退一步" },
+    { text: "（高情商）我理解你的意思，我们换个角度看。", type: "高情商", desc: "换个角度" },
+    { text: "（硬刚）你这话说得不对，我不同意。", type: "幽默硬刚", desc: "正面硬刚" }
   ];
 
+  // 破防状态下，给"硬刚"类型的选项打上终结技标签
   opts.forEach(opt => {
     const btn = document.createElement('button');
     btn.className = 'option-btn';
-    btn.textContent = opt.text;
+
+    // 类型映射到标签样式
+    const typeMap = {
+      '忍让': { tag: '🛡️ 忍让', cls: 'tag-defend' },
+      '高情商': { tag: '🤝 高情商', cls: 'tag-diplomat' },
+      '幽默硬刚': { tag: '⚔️ 硬刚', cls: 'tag-strike' },
+      '硬刚': { tag: '⚔️ 硬刚', cls: 'tag-strike' }
+    };
+    const typeInfo = typeMap[opt.type] || { tag: opt.type, cls: 'tag-strike' };
+
+    // 如果破防状态且是硬刚类型，升级为终结技
+    const isFinisher = isBreakState && (opt.type === '幽默硬刚' || opt.type === '硬刚');
+
+    btn.innerHTML = `
+      <div class="opt-header">
+        <span class="opt-tag ${isFinisher ? 'tag-finisher' : typeInfo.cls}">${isFinisher ? '🔥 终结技' : typeInfo.tag}</span>
+        ${opt.desc ? '<span class="opt-desc">' + opt.desc + '</span>' : ''}
+      </div>
+      <div class="opt-text">${opt.text}</div>
+    `;
     btn.addEventListener('click', () => submitPlayerTurn(opt.text));
     panel.appendChild(btn);
   });
@@ -1208,6 +1332,11 @@ async function requestAI() {
 
     const { npcReply, statChanges, suggestedOptions } = data;
 
+    // 显示系统观察（裁判旁白）
+    if (data.observation) {
+      addObservation(data.observation);
+    }
+
     // 添加到聊天记录
     if (npcReply) {
       addMessage('assistant', npcReply);
@@ -1219,6 +1348,15 @@ async function requestAI() {
     state.npcFace = Math.min(100, state.npcFace + Math.max(0, statChanges?.face || 0));
     state.playerBP = Math.min(100, state.playerBP + Math.max(0, statChanges?.bp || 0));
     updateBars();
+
+    // 破防抖动效果
+    if (statChanges?.breakdown >= 20) {
+      const npcAvatar = document.getElementById('npc-avatar');
+      if (npcAvatar) {
+        npcAvatar.classList.add('break-flash');
+        setTimeout(() => npcAvatar.classList.remove('break-flash'), 500);
+      }
+    }
 
     // 检查熔断
     if (state.npcBreakdown >= 100 || state.npcFace >= 100 || state.playerBP >= 100) {

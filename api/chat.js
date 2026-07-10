@@ -8,38 +8,42 @@ function buildFallbackReply(sceneId) {
   const fallbacks = {
     coworker: {
       npcReply: "哎呀你别急嘛，这个事情咱们再对焦一下，你先回去想想底层逻辑，明天再碰。",
+      observation: "注意：他正在用互联网黑话来模糊责任边界",
       statChanges: { breakdown: 0, face: 0, bp: 5 },
       suggestedOptions: [
-        { text: "（忍让）好吧，我想想再说。", type: "忍让" },
-        { text: "（高情商）您说得对，我回去沉淀一下思路。", type: "高情商" },
-        { text: "（幽默硬刚）底层逻辑就是你在甩锅，这还需要对焦？", type: "幽默硬刚" }
+        { text: "（忍让）好吧，我先想想。", type: "忍让", desc: "先退一步" },
+        { text: "（高情商）对焦可以，但我需要先确认责任归属，不然没法闭环。", type: "高情商", desc: "用他的话术反将" },
+        { text: "（硬刚）底层逻辑就是你在甩锅，这还需要对焦？", type: "幽默硬刚", desc: "当场拆穿" }
       ]
     },
     boss: {
       npcReply: "你这是什么态度？年轻人要虚心一点，别总觉得自己的想法都对。回去好好反思一下。",
+      observation: "破绽：他在回避具体问题，转而攻击你的态度",
       statChanges: { breakdown: 0, face: 0, bp: 10 },
       suggestedOptions: [
-        { text: "（忍让）好的老板，我回去反思。", type: "忍让" },
-        { text: "（高情商）老板您批评得对，是我太浮躁了。", type: "高情商" },
-        { text: "（幽默硬刚）我反思了一下，确实是我错了——错在不该跟您讲道理。", type: "幽默硬刚" }
+        { text: "（忍让）好的老板，我回去反思。", type: "忍让", desc: "暂时低头" },
+        { text: "（高情商）老板您说得对，态度确实很重要。那具体方案哪里需要调整，请您指导一下？", type: "高情商", desc: "柔性要反馈" },
+        { text: "（硬刚）我反思了一下，确实是我错了——错在不该跟您讲道理。", type: "幽默硬刚", desc: "阴阳怪气" }
       ]
     },
     hr: {
       npcReply: "你看你，情绪不要这么激动嘛。咱们从公司的角度来想，格局大一点好不好？",
+      observation: "套路：用'格局'来道德绑架，让你不好意思争取利益",
       statChanges: { breakdown: 0, face: 0, bp: 5 },
       suggestedOptions: [
-        { text: "（忍让）好，我冷静一下。", type: "忍让" },
-        { text: "（高情商）谢谢您帮我疏导，我确实需要调整心态。", type: "高情商" },
-        { text: "（幽默硬刚）我格局已经很大了，大到能装下你们的画饼了。", type: "幽默硬刚" }
+        { text: "（忍让）好，我冷静一下。", type: "忍让", desc: "先稳住情绪" },
+        { text: "（高情商）谢谢您帮我疏导。不过话说回来，我的KPI和贡献是客观的，这和情绪无关。", type: "高情商", desc: "就事论事" },
+        { text: "（硬刚）我格局已经很大了，大到能装下你们的画饼了。", type: "幽默硬刚", desc: "当场回怼" }
       ]
     },
     custom: {
       npcReply: "哼，你说的这些我根本不关心。这事就这么定了，你别再纠缠了。",
+      observation: "注意：对方拒绝沟通，试图用强势态度结束话题",
       statChanges: { breakdown: 0, face: 0, bp: 10 },
       suggestedOptions: [
-        { text: "（忍让）行吧，那就这样吧。", type: "忍让" },
-        { text: "（高情商）好的，咱们保持沟通，找个双方都能接受的方案。", type: "高情商" },
-        { text: "（幽默硬刚）定了？我还记得上次你也是这么说的呢。", type: "幽默硬刚" }
+        { text: "（忍让）行吧，那就这样吧。", type: "忍让", desc: "选择忍让" },
+        { text: "（高情商）好的，咱们保持沟通，找个双方都能接受的方案。", type: "高情商", desc: "留有余地" },
+        { text: "（硬刚）定了？我还记得上次你也是这么说的呢。", type: "幽默硬刚", desc: "翻旧账回击" }
       ]
     }
   };
@@ -89,7 +93,7 @@ async function callDeepSeek(API_KEY, messages) {
         model: 'deepseek-chat',
         messages: messages,
         response_format: { type: 'json_object' },
-        max_tokens: 1024,
+        max_tokens: 1200,
         temperature: 0.6
       }),
       signal: controller.signal
@@ -213,13 +217,20 @@ export default async function handler(req, res) {
 【输出格式要求】
 你必须返回合法的 JSON，字段如下：
 - npcReply: 你的回复文本
+- observation: 裁判旁白，指出NPC话中的破绽或套路（15-30字，帮助玩家找方向）
 - statChanges: 包含 breakdown/face/bp 三个整数(0-30)
-- suggestedOptions: 包含3个选项，每个有 text 和 type 字段（type 只能是"忍让"、"高情商"、"幽默硬刚"之一）
+- suggestedOptions: 包含3个选项，每个有 text、type 和 desc 字段（type 只能是"忍让"、"高情商"、"幽默硬刚"之一，desc 是该选项的策略描述10字以内）
 
 【选项生成要求】
 - 三个选项分别对应三种策略：忍让退让、高情商应对、幽默/硬核反击
 - 选项要结合当前对话上下文，不要太通用
 - 每个选项前用括号标注类型，如"（忍让）"、"（高情商）"、"（硬刚）"
+
+【观察提示要求】
+- 每次NPC说话后，你都要以裁判身份给出一条简短的旁白观察
+- 观察要指出NPC话中的逻辑漏洞、话术套路、情绪变化等
+- 观察语气要轻松幽默，像游戏里的提示，不要太严肃
+- 示例："注意到：他刻意回避了数据来源的问题" / "破绽：他开始用'团队'来转移话题了" / "观察：他的笑容有点僵住了"
 
 【打分参考范例】
 场景：NPC 甩锅。玩家："行行行，千错万错我的错，我今晚通宵重写总行了吧？！"
@@ -229,6 +240,15 @@ export default async function handler(req, res) {
 场景：NPC 说"年轻人要懂得感恩"。玩家："感恩？我感恩您全家。要不我把工资也感恩给您？"
 你的后台思路：玩家在阴阳怪气，非常扎心，NPC 会被怼得很尴尬。
 你应该输出的 statChanges 为：{ "breakdown": 25, "face": 0, "bp": 0 }
+
+【选项生成范例】
+NPC说："这事儿我之前跟您提过吧？"
+你应该输出的 suggestedOptions 为：
+[
+  { "text": "（忍让）好吧，那可能是我记错了。", "type": "忍让", "desc": "先退一步" },
+  { "text": "（高情商）也许我们都记错了，不如查一下聊天记录？", "type": "高情商", "desc": "引导查证据" },
+  { "text": "（硬刚）你提过？聊天记录里可没有，要不现在翻出来看看？", "type": "幽默硬刚", "desc": "直接要证据" }
+]
 `;
 
   // 清洗历史记录，只保留最近 3 轮（6 条消息），控制上下文长度
