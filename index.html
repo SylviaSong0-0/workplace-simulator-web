@@ -828,6 +828,7 @@ const scenes = {
     people: '你、同事、组长',
     difficulty: '⭐⭐⭐',
     background: '线上出了一个紧急bug，客户投诉到了总监那里。组长拉了紧急复盘会。你昨晚加班到10点，已经定位到是这位同事负责的模块出了问题——他改了配置但没通知任何人。但你知道，这人出了名的会甩锅，会上肯定要反咬一口...',
+    narrativeBackground: '线上出了一个紧急bug，客户投诉到了总监那里，组长正在开紧急复盘会。这位同事（也就是你，NPC）私下改了配置但没通知任何人，是你的失误导致了问题。但你是出了名的甩锅王，你决定把责任推给对方开发。',
     goal: '在组长面前澄清事实，让这位同事为自己的失误负责，同时不能显得你在推卸责任。'
   },
   boss: {
@@ -842,6 +843,7 @@ const scenes = {
     people: '你、你的领导',
     difficulty: '⭐⭐⭐⭐',
     background: '你熬了三个通宵做的项目方案，被领导拿去在大老板面前汇报，说是他自己"闭关一周想出来的"。大老板非常满意，当场说要重点"培养"他。你在下面听得拳头都攥紧了。散会后你决定去找领导谈谈...',
+    narrativeBackground: '下属做了一个很棒的项目方案，你（领导）拿去在大老板面前汇报，说是自己想出来的，大老板很满意。现在下属来找你理论了。你觉得下属的功劳都是你领导有方，你拿是应该的，你还觉得下属太年轻不懂感恩。',
     goal: '既要回属于自己的功劳，又不能让领导觉得你在挑战他的权威。'
   },
   hr: {
@@ -856,6 +858,7 @@ const scenes = {
     people: '你、HR',
     difficulty: '⭐⭐⭐⭐⭐',
     background: '你去年绩效是A，加班最多，项目完成度最高，本以为今年稳涨薪。结果HR找你"一对一谈心"，说公司今年"遇到了一些挑战"，涨薪暂缓，但是给你"更大的成长空间"和"更重要的职责"。你一听就知道是被画饼了...',
+    narrativeBackground: '公司今年要降本增效，上头要求控制涨薪比例。这位员工去年绩效是A，加班最多，但你（HR）决定不给他涨薪，而是用"成长空间"、"拥抱变化"来画饼安抚。你觉得这是为了公司好，也是为了员工好。',
     goal: '争取到应得的涨薪，或者至少套出真实原因，别被"拥抱变化"四个字打发了。'
   },
   custom: {
@@ -870,6 +873,7 @@ const scenes = {
     people: '—',
     difficulty: '?',
     background: '',
+    narrativeBackground: '',
     goal: '根据你输入的场景，自由发挥！'
   }
 };
@@ -1021,8 +1025,9 @@ function startBattle(sceneId, customBackground = '', sceneDataOverride = null) {
 
   const sceneData = sceneDataOverride || scenes[sceneId] || scenes.custom;
 
-  // 如果是固定场景，把预设的背景故事也传给后端，让 NPC 对话更贴合场景
-  const finalBackground = customBackground || sceneData.background || '';
+  // 传给后端的背景：优先用 NPC 视角的 narrativeBackground（固定场景），
+  // 自定义场景则用 customBackground
+  const finalBackground = customBackground || sceneData.narrativeBackground || sceneData.background || '';
 
   state = {
     sceneId,
