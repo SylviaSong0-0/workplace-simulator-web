@@ -430,6 +430,17 @@
       border-bottom-left-radius: 4px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
+    .bubble.assistant .obs-hint {
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px dashed #e0e0e0;
+      font-size: 12px;
+      color: #888;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      line-height: 1.4;
+    }
     .typing-indicator {
       display: flex;
       align-items: center;
@@ -491,10 +502,14 @@
     /* ========== 胶囊标签选项区 ========== */
     .capsule-options {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
+      overflow-x: auto;
       gap: 8px;
-      padding: 0;
+      padding: 0 4px 4px 0;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
     }
+    .capsule-options::-webkit-scrollbar { display: none; }
     .capsule-btn {
       display: flex;
       align-items: center;
@@ -755,11 +770,11 @@
   </style>
 </head>
 <body>
-<!-- v23 - face改为玩家体面 + 6种结局 -->
+<!-- v24 - 观察提示嵌入NPC气泡 + 胶囊单行滚动 -->
 
 <div class="phone-frame">
   <div class="phone-screen">
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v23</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v24</div>
 
 <!-- ===== 首页 ===== -->
 <div id="home-page" class="page active">
@@ -1212,7 +1227,7 @@ function updateBars() {
 }
 
 // ========== 添加消息到聊天区 ==========
-function addMessage(role, content) {
+function addMessage(role, content, observation) {
   // 强去重：如果是 NPC 消息，且内容已显示过，则不再添加
   if (role === 'assistant') {
     if (content === lastRenderedReply) {
@@ -1227,6 +1242,13 @@ function addMessage(role, content) {
   const bubble = document.createElement('div');
   bubble.className = `bubble ${role}`;
   bubble.textContent = content;
+  // NPC 气泡内嵌入观察提示
+  if (role === 'assistant' && observation) {
+    const hint = document.createElement('div');
+    hint.className = 'obs-hint';
+    hint.innerHTML = '<span class="eye-icon">👁️</span> ' + observation;
+    bubble.appendChild(hint);
+  }
   row.appendChild(bubble);
   chatArea.appendChild(row);
   chatArea.scrollTop = chatArea.scrollHeight;
@@ -1485,14 +1507,9 @@ async function requestAI() {
 
     const { npcReply, statChanges, suggestedOptions } = data;
 
-    // 显示系统观察（裁判旁白）
-    if (data.observation) {
-      addObservation(data.observation);
-    }
-
-    // 添加到聊天记录
+    // 添加到聊天记录（观察提示嵌入NPC气泡内）
     if (npcReply) {
-      addMessage('assistant', npcReply);
+      addMessage('assistant', npcReply, data.observation);
       state.history.push({ role: 'assistant', content: npcReply, statChanges: statChanges || {} });
     }
 
