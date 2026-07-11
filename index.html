@@ -755,11 +755,11 @@
   </style>
 </head>
 <body>
-<!-- v22 - 修复标签重复 + desc撞车 + 观察重复 -->
+<!-- v23 - face改为玩家体面 + 6种结局 -->
 
 <div class="phone-frame">
   <div class="phone-screen">
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v22</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v23</div>
 
 <!-- ===== 首页 ===== -->
 <div id="home-page" class="page active">
@@ -871,15 +871,17 @@
           <span class="label">NPC破防</span>
           <div class="progress-bg"><div class="progress-fg breakdown" id="bar-breakdown" style="width:0%"></div></div>
         </div>
-        <div class="bar-row">
-          <span class="label">NPC体面</span>
-          <div class="progress-bg"><div class="progress-fg face" id="bar-face" style="width:0%"></div></div>
-        </div>
       </div>
     </div>
     <div class="player-bar">
-      <span class="label">我的血压</span>
-      <div class="progress-bg"><div class="progress-fg bp" id="bar-bp" style="width:0%"></div></div>
+      <div class="bar-row">
+        <span class="label">我的体面</span>
+        <div class="progress-bg"><div class="progress-fg face" id="bar-face" style="width:0%"></div></div>
+      </div>
+      <div class="bar-row">
+        <span class="label">我的血压</span>
+        <div class="progress-bg"><div class="progress-fg bp" id="bar-bp" style="width:0%"></div></div>
+      </div>
     </div>
   </div>
   <div class="chat-area" id="chat-area"></div>
@@ -904,7 +906,7 @@
           <span class="value" id="stat-breakdown">0</span>
         </div>
         <div class="stat-box">
-          <span class="label">NPC体面值</span>
+          <span class="label">我的体面</span>
           <span class="value" id="stat-face">0</span>
         </div>
         <div class="stat-box">
@@ -939,7 +941,7 @@ let state = {
   customBackground: '',
   sceneData: null,
   npcBreakdown: 0,
-  npcFace: 0,
+  playerFace: 0,
   playerBP: 0,
   history: [],
   isLoading: false
@@ -1171,7 +1173,7 @@ function startBattle(sceneId, customBackground = '', sceneDataOverride = null) {
     sceneData,
     customPersona: sceneData.customPersona || null, // 自定义场景的 persona
     npcBreakdown: 0,
-    npcFace: 0,
+    playerFace: 0,
     playerBP: 0,
     history: [],
     isLoading: false
@@ -1193,7 +1195,7 @@ function startBattle(sceneId, customBackground = '', sceneDataOverride = null) {
 // ========== 更新进度条 ==========
 function updateBars() {
   document.getElementById('bar-breakdown').style.width = state.npcBreakdown + '%';
-  document.getElementById('bar-face').style.width = state.npcFace + '%';
+  document.getElementById('bar-face').style.width = (state.playerFace || 0) + '%';
   document.getElementById('bar-bp').style.width = state.playerBP + '%';
   const turn = state.history.filter(m => m.role === 'user').length + 1;
   document.getElementById('battle-turn').textContent = `第 ${turn} 回合`;
@@ -1496,7 +1498,7 @@ async function requestAI() {
 
     // 更新数值
     state.npcBreakdown = Math.min(100, state.npcBreakdown + Math.max(0, statChanges?.breakdown || 0));
-    state.npcFace = Math.min(100, state.npcFace + Math.max(0, statChanges?.face || 0));
+    state.playerFace = Math.min(100, state.playerFace + Math.max(0, statChanges?.face || 0));
     state.playerBP = Math.min(100, state.playerBP + Math.max(0, statChanges?.bp || 0));
     updateBars();
 
@@ -1510,7 +1512,7 @@ async function requestAI() {
     }
 
     // 检查熔断
-    if (state.npcBreakdown >= 100 || state.npcFace >= 100 || state.playerBP >= 100) {
+    if (state.npcBreakdown >= 100 || state.playerBP >= 100) {
       setLoading(false);
       isRequesting = false;
       setTimeout(() => showResult(), 800);
@@ -1544,31 +1546,30 @@ function retryLastRequest() {
   requestAI();
 }
 
-// ========== 显示结果 ==========
+// ========== 显示结果（6种结局：胜负 × 体面高/中/低） ==========
 function showResult() {
-  const { npcBreakdown, npcFace, playerBP } = state;
-  let icon, title, desc, bgColor;
+  const { npcBreakdown, playerFace, playerBP } = state;
+  const won = npcBreakdown >= 100;
+  const faceLevel = playerFace >= 60 ? 'high' : playerFace >= 30 ? 'mid' : 'low';
 
-  if (playerBP >= 100) {
-    icon = '💢'; title = '血压爆表，内耗失败';
-    desc = '你被气得浑身发抖，晚上躺在床上都在想白天没发挥好的那句话。';
-    bgColor = '#f3e5f5';
-  } else if (npcBreakdown >= 100) {
-    icon = '🔥'; title = 'NPC 彻底破防！';
-    desc = '爽文结局！你精准的痛击让对方哑口无言，当场心态崩溃。';
-    bgColor = '#ffebee';
-  } else {
-    icon = '💼'; title = '专业致胜，体面人';
-    desc = '你没有情绪失控，而是用极其专业的态度和流程，让对方无话可说。';
-    bgColor = '#e8f5e9';
-  }
+  const outcomes = {
+    win_high:  { icon: '🏆', title: '优雅完胜',    desc: '你有理有据，步步为营，对方不仅被你说服，还对你刮目相看。这就是职场吵架的最高境界。',       bgColor: '#e8f5e9' },
+    win_mid:   { icon: '🥇', title: '据理力争',    desc: '你赢了，但过程有些磕绊。对方虽然认了，但心里不太服气。不过——赢了就是赢了。',               bgColor: '#f3e5f5' },
+    win_low:   { icon: '💢', title: '撕破脸了',    desc: '你赢了，但代价是撕破了脸。对方虽然被你怼得哑口无言，但办公室里的气氛从此变了味。',         bgColor: '#ffebee' },
+    lose_high: { icon: '🎭', title: '体面离场',    desc: '虽然这次没吵赢，但你保持了风度和尊严。来日方长，江湖再见时你依然是那个让人尊重的人。',     bgColor: '#e8f5e9' },
+    lose_mid:  { icon: '😐', title: '无奈妥协',    desc: '你退让了，但心里清楚这只是暂时的。下次遇到同样的事，你会准备得更充分。',                     bgColor: '#f3e5f5' },
+    lose_low:  { icon: '🍅', title: '被当软柿子了', desc: '你不仅输了，还输得很难看。对方可能在心里给你贴上了"好欺负"的标签。下次，别再这样了。',   bgColor: '#ffebee' }
+  };
 
-  document.getElementById('result-icon').textContent = icon;
-  document.getElementById('result-title').textContent = title;
-  document.getElementById('result-desc').textContent = desc;
-  document.getElementById('result-card').style.background = bgColor;
+  const key = (won ? 'win' : 'lose') + '_' + faceLevel;
+  const outcome = outcomes[key];
+
+  document.getElementById('result-icon').textContent = outcome.icon;
+  document.getElementById('result-title').textContent = outcome.title;
+  document.getElementById('result-desc').textContent = outcome.desc;
+  document.getElementById('result-card').style.background = outcome.bgColor;
   document.getElementById('stat-breakdown').textContent = npcBreakdown;
-  document.getElementById('stat-face').textContent = npcFace;
+  document.getElementById('stat-face').textContent = playerFace;
   document.getElementById('stat-bp').textContent = playerBP;
 
   showPage('result-page');
