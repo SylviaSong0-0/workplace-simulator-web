@@ -451,17 +451,27 @@
       border-bottom-left-radius: 4px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
-    .bubble.assistant .obs-hint {
-      margin-top: 8px;
-      padding-top: 6px;
-      border-top: 1px dashed #e0e0e0;
-      font-size: 12px;
+    /* ========== 独立观察提示胶囊 ========== */
+    .obs-capsule-row {
+      justify-content: center;
+      margin-top: 4px;
+      margin-bottom: 8px;
+    }
+    .obs-capsule {
+      max-width: 90%;
+      background: #f5f6f8;
       color: #888;
+      font-size: 12px;
+      border: 1px dashed #ddd;
+      border-radius: 99px;
+      padding: 6px 14px;
       display: flex;
       align-items: center;
       gap: 4px;
       line-height: 1.4;
+      animation: fadeIn 0.4s ease;
     }
+    .obs-capsule .eye-icon { font-size: 13px; }
     .typing-indicator {
       display: flex;
       align-items: center;
@@ -791,11 +801,11 @@
   </style>
 </head>
 <body>
-<!-- v26 - 修复评分：策略标签传给后端，AI按标签优先评分 -->
+<!-- v27 - 观察提示独立胶囊：从NPC气泡内移出为独立pill组件 -->
 
 <div class="phone-frame">
   <div class="phone-screen">
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v26</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v27</div>
 
 <!-- ===== 首页 ===== -->
 <div id="home-page" class="page active">
@@ -1283,15 +1293,18 @@ function addMessage(role, content, observation) {
   const bubble = document.createElement('div');
   bubble.className = `bubble ${role}`;
   bubble.textContent = content;
-  // NPC 气泡内嵌入观察提示
-  if (role === 'assistant' && observation) {
-    const hint = document.createElement('div');
-    hint.className = 'obs-hint';
-    hint.innerHTML = '<span class="eye-icon">👁️</span> ' + observation;
-    bubble.appendChild(hint);
-  }
   row.appendChild(bubble);
   chatArea.appendChild(row);
+  // NPC 消息后追加独立的观察提示胶囊
+  if (role === 'assistant' && observation) {
+    const obsRow = document.createElement('div');
+    obsRow.className = 'msg-row obs-capsule-row';
+    const capsule = document.createElement('div');
+    capsule.className = 'obs-capsule';
+    capsule.innerHTML = '<span class="eye-icon">👁️</span> ' + observation;
+    obsRow.appendChild(capsule);
+    chatArea.appendChild(obsRow);
+  }
   chatArea.scrollTop = chatArea.scrollHeight;
 }
 
