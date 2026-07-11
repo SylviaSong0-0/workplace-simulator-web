@@ -520,9 +520,22 @@
       font-weight: 600;
     }
     .capsule-btn .cap-hint {
-      font-size: 11px;
-      color: #999;
-      margin-left: 2px;
+      display: none; /* 不在胶囊内显示，改为 title 悬浮提示 */
+    }
+    .capsule-btn[title]:hover::after {
+      content: attr(title);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 100;
     }
     .capsule-btn.defend { border-color: #c8e6c9; background: #f1f8e9; }
     .capsule-btn.defend .cap-label { color: #388E3C; }
@@ -742,11 +755,11 @@
   </style>
 </head>
 <body>
-<!-- v21 - 历史记录自然语言化 + 胶囊标签选项 -->
+<!-- v22 - 修复标签重复 + desc撞车 + 观察重复 -->
 
 <div class="phone-frame">
   <div class="phone-screen">
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v21</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v22</div>
 
 <!-- ===== 首页 ===== -->
 <div id="home-page" class="page active">
@@ -1277,20 +1290,20 @@ function renderOptions(options) {
   // 判断是否处于破防状态
   const isBreakState = state.npcBreakdown >= 80;
 
-  // 丰富的兜底选项库（用于替换重复选项）
+  // 丰富的兜底选项库（desc 用于悬浮提示，不能和 label 相同）
   const fallbackPool = [
-    { label: "先退一步", text: "你说得对，我再想想。", type: "退让", desc: "先退一步" },
-    { label: "换个角度", text: "我理解你的意思，我们换个角度看。", type: "迂回", desc: "换个角度" },
-    { label: "正面硬刚", text: "你这话说得不对，我不同意。", type: "反击", desc: "正面硬刚" },
-    { label: "追问细节", text: "能具体说说吗？我想确认一下细节。", type: "追问", desc: "要求具体化" },
-    { label: "装傻充愣", text: "嗯，这个角度我没想过，你继续。", type: "装傻", desc: "以退为进" },
-    { label: "借力打力", text: "那按你的逻辑，上次那次又怎么解释？", type: "翻旧账", desc: "借力打力" },
-    { label: "证据说话", text: "你说得对，但我有个数据想跟你确认...", type: "数据反击", desc: "用证据说话" },
-    { label: "拉回正题", text: "咱们先不讨论这个，聊聊核心问题吧。", type: "转移", desc: "拉回正题" },
-    { label: "设下陷阱", text: "你这么一说，我突然想起一件事...", type: "挖坑", desc: "设下陷阱" },
-    { label: "阴阳怪气", text: "你的意思是我理解错了？那原话是什么？", type: "反讽", desc: "阴阳怪气" },
-    { label: "留个证据", text: "好，那我们就按你说的来，我记下了。", type: "冷处理", desc: "留证据" },
-    { label: "步步紧逼", text: "这个逻辑挺有意思的，能展开讲讲吗？", type: "试探", desc: "逼迫解释" }
+    { label: "先退一步", text: "你说得对，我再想想。", type: "退让", desc: "暂时认怂，降低冲突" },
+    { label: "换个角度", text: "我理解你的意思，我们换个角度看。", type: "迂回", desc: "转移话题方向" },
+    { label: "正面硬刚", text: "你这话说得不对，我不同意。", type: "反击", desc: "直接表达反对" },
+    { label: "追问细节", text: "能具体说说吗？我想确认一下细节。", type: "追问", desc: "逼迫对方说清楚" },
+    { label: "装傻充愣", text: "嗯，这个角度我没想过，你继续。", type: "装傻", desc: "让对方多说暴露破绽" },
+    { label: "借力打力", text: "那按你的逻辑，上次那次又怎么解释？", type: "翻旧账", desc: "用历史矛盾反制" },
+    { label: "证据说话", text: "你说得对，但我有个数据想跟你确认...", type: "数据反击", desc: "用客观事实反驳" },
+    { label: "拉回正题", text: "咱们先不讨论这个，聊聊核心问题吧。", type: "转移", desc: "不被带偏，回归主线" },
+    { label: "设下陷阱", text: "你这么一说，我突然想起一件事...", type: "挖坑", desc: "为后续反击埋伏笔" },
+    { label: "阴阳怪气", text: "你的意思是我理解错了？那原话是什么？", type: "反讽", desc: "讽刺式反问" },
+    { label: "留个证据", text: "好，那我们就按你说的来，我记下了。", type: "冷处理", desc: "表面上同意，留记录" },
+    { label: "步步紧逼", text: "这个逻辑挺有意思的，能展开讲讲吗？", type: "试探", desc: "追问到底不松口" }
   ];
 
   // 如果选项为空，用兜底选项
@@ -1311,6 +1324,26 @@ function renderOptions(options) {
       return opt;
     });
   }
+
+  // 本轮内去重：如果多个选项 label 相同，从兜底池替换
+  const seenLabels = new Set();
+  opts = opts.map((opt, idx) => {
+    const lbl = opt.label || opt.type || '';
+    if (seenLabels.has(lbl)) {
+      // 当前 label 已经在本轮出现过，从兜底池找替换
+      for (const fb of fallbackPool) {
+        const fbLbl = fb.label;
+        if (!seenLabels.has(fbLbl) && !state.lastOptionLabels?.includes(fbLbl)) {
+          seenLabels.add(fbLbl);
+          return fb;
+        }
+      }
+      // 兜底池也耗尽了，加序号区分
+      return { ...opt, label: lbl + '②', type: opt.type || lbl };
+    }
+    seenLabels.add(lbl);
+    return opt;
+  });
 
   // 保存本轮选项标签，用于传给后端和下轮去重
   state.lastOptionLabels = opts.map(o => o.label || o.type);
@@ -1350,7 +1383,8 @@ function renderOptions(options) {
     }
 
     cap.classList.add(cls);
-    cap.innerHTML = `<span class="cap-icon">${icon}</span><span class="cap-label">${label}</span>${opt.desc ? '<span class="cap-hint">' + opt.desc + '</span>' : ''}`;
+    cap.title = opt.desc || '';
+    cap.innerHTML = `<span class="cap-icon">${icon}</span><span class="cap-label">${label}</span>`;
     cap.addEventListener('click', () => submitPlayerTurn(opt.text, opt.label));
     capsuleRow.appendChild(cap);
   });
