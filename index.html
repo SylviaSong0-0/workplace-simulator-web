@@ -801,11 +801,11 @@
   </style>
 </head>
 <body>
-<!-- v27 - 观察提示独立胶囊：从NPC气泡内移出为独立pill组件 -->
+<!-- v28 - 准备页预取：后台预加载首条AI消息，进入战场即时显示 -->
 
 <div class="phone-frame">
   <div class="phone-screen">
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v27</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v28</div>
 
 <!-- ===== 首页 ===== -->
 <div id="home-page" class="page active">
@@ -1001,6 +1001,7 @@ let currentRequestId = 0;
 let lastSubmitTime = 0;  
 let lastRenderedReply = '';
 let isRequesting = false;  // 全局锁：防止并发
+window.__prefetchCache = null; // 准备页预取缓存
 
 const scenes = {
   coworker: {
@@ -1075,6 +1076,25 @@ function showPage(pageId) {
   document.getElementById(pageId).scrollTop = 0;
 }
 
+// ========== 准备页预取：后台提前请求第一条AI消息 ==========
+function prefetchFirstMessage(sceneId, customBackground, customPersona) {
+  const cacheKey = sceneId + '|' + customBackground + '|' + (customPersona || '');
+  // 如果已有相同 key 的预取在进行中，不重复发起
+  if (window.__prefetchCache && window.__prefetchCache.key === cacheKey) return;
+  const promise = fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sceneId,
+      customBackground,
+      customPersona: customPersona || null,
+      history: [],
+      unusedLabels: []
+    })
+  });
+  window.__prefetchCache = { key: cacheKey, promise };
+}
+
 // ========== 首页事件 ==========
 document.querySelectorAll('.scene-card').forEach(card => {
   card.addEventListener('click', () => {
@@ -1097,6 +1117,9 @@ function showPrepPage(sceneId) {
   const sceneData = scenes[sceneId] || scenes.custom;
   renderPrepPage(sceneId, sceneData, null);
   showPage('prep-page');
+  // 后台预取第一条AI消息，加快进入战场后的首条响应
+  const bg = sceneData.narrativeBackground || sceneData.background || '';
+  prefetchFirstMessage(sceneId, bg, sceneData.customPersona || null);
 }
 
 // ========== 准备页：自定义场景（调用AI分析） ==========
@@ -1146,6 +1169,8 @@ async function showCustomPrepPage(customBackground) {
     };
 
     renderPrepPage(data.sceneType || 'custom', customSceneData, customBackground);
+    // 后台预取第一条AI消息
+    prefetchFirstMessage(data.sceneType || 'custom', customBackground, data.persona || null);
   } catch (err) {
     console.error('场景分析失败:', err);
     // 失败时用兜底数据
@@ -1155,6 +1180,8 @@ async function showCustomPrepPage(customBackground) {
       title: '自定义对局'
     };
     renderPrepPage('custom', fallbackScene, customBackground);
+    // 后台预取（兜底场景）
+    prefetchFirstMessage('custom', customBackground, null);
   } finally {
     startBtn.classList.remove('loading');
     startBtn.textContent = '进入战场 ⚔️';
@@ -1190,6 +1217,7 @@ function renderPrepPage(sceneType, sceneData, customBackground) {
 
 // ========== 准备页事件 ==========
 document.getElementById('prep-back').addEventListener('click', () => {
+  window.__prefetchCache = null;
   showPage('home-page');
 });
 
@@ -1533,20 +1561,29 @@ async function requestAI() {
   setLoading(true);
 
   try {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sceneId: state.sceneId,
-        customBackground: state.customBackground,
-        customPersona: state.customPersona,
-        history: state.history,
-        unusedLabels: state.lastOptionLabels || []
-      })
-    });
+    // ===== 预取缓存检查：首条消息可能已在准备页预加载 =====
+    const cacheKey = state.sceneId + '|' + state.customBackground + '|' + (state.customPersona || '');
+    let res;
+    if (state.history.length === 0 && window.__prefetchCache && window.__prefetchCache.key === cacheKey) {
+      console.log('命中预取缓存，跳过API请求');
+      res = await window.__prefetchCache.promise;
+      window.__prefetchCache = null;
+    } else {
+      res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sceneId: state.sceneId,
+          customBackground: state.customBackground,
+          customPersona: state.customPersona,
+          history: state.history,
+          unusedLabels: state.lastOptionLabels || []
+        })
+      });
 
-    // 幽灵请求检查
-    if (reqId !== currentRequestId) { isRequesting = false; return; }
+      // 幽灵请求检查（仅对正常请求有效，预取不检查）
+      if (reqId !== currentRequestId) { isRequesting = false; return; }
+    }
 
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`);
@@ -1660,6 +1697,7 @@ document.getElementById('btn-home').addEventListener('click', () => {
 // ========== Battle 页事件 ==========
 document.getElementById('battle-back').addEventListener('click', () => {
   if (confirm('确定要退出当前推演吗？')) {
+    window.__prefetchCache = null;
     showPage('home-page');
   }
 });
