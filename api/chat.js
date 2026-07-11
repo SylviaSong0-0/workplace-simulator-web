@@ -211,6 +211,7 @@ export default async function handler(req, res) {
 - **玩家体面值(face)**：这是玩家自己的体面值。玩家在回击时保持风度、有理有据、不卑不亢时加分。妥协退让时也加分（因为你保护了自己，没有撕破脸）。face 不影响胜负，只影响结局的质量——高体面代表赢得漂亮或输得体面，低体面代表撕破脸或被当软柿子。
 
 【重要：打分规则——这是最关键的指令】
+0. 如果玩家消息中带有"（选择了"XXX"策略）"的标签，你必须以这个标签所指的策略类型为第一优先级来判断分数，而不是只看文字内容。例如：玩家选择了"硬刚"策略，即使他的文字看起来有理有据，也必须按"直接硬刚"给分（breakdown +20~30，face 0，bp 0），不能给 face 分。同理，选择了"妥协"策略就必须按妥协规则给分，不能因为文字里有反问就改成 breakdown。标签优先于文字内容！
 1. 玩家每说一句有实质内容的话，你必须至少给一项加分。除非是"嗯""好的"这种完全没内容的废话，否则不要给全0分。
 2. 玩家的话如果包含反问、质疑、指出问题、阴阳怪气、硬刚等攻击性内容 → 必须给 breakdown 加分（10-30分，根据力度判断）。
 3. 玩家的话如果包含道歉、承认错误、退让、妥协、自我怀疑 → 必须给 bp 加分（10-30分，根据力度判断），同时如果退让方式体面、保护了自己的尊严，也给 face 加分（5-15分）。
@@ -295,14 +296,15 @@ export default async function handler(req, res) {
       if (m.statChanges) {
         const parts = [];
         if (m.statChanges.breakdown) parts.push(`NPC破防+${m.statChanges.breakdown}`);
-        if (m.statChanges.face) parts.push(`NPC体面+${m.statChanges.face}`);
+        if (m.statChanges.face) parts.push(`玩家体面+${m.statChanges.face}`);
         if (m.statChanges.bp) parts.push(`玩家血压+${m.statChanges.bp}`);
         if (parts.length > 0) text += `\n[本轮分数变化]：${parts.join('，')}`;
       }
       return { role: 'assistant', content: text };
     }
     if (m.role === 'user') {
-      return { role: 'user', content: `[玩家]：${m.content}` };
+      const labelTag = m.label ? `（选择了"${m.label}"策略）` : '';
+      return { role: 'user', content: `[玩家]${labelTag}：${m.content}` };
     }
     return m;
   });

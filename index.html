@@ -791,11 +791,11 @@
   </style>
 </head>
 <body>
-<!-- v25 - 评分先行：分数动画先播，NPC回复后出 -->
+<!-- v26 - 修复评分：策略标签传给后端，AI按标签优先评分 -->
 
 <div class="phone-frame">
   <div class="phone-screen">
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v25</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v26</div>
 
 <!-- ===== 首页 ===== -->
 <div id="home-page" class="page active">
@@ -1491,7 +1491,7 @@ function submitPlayerTurn(text, label) {
   lastSubmitTime = now;
 
   addMessage('user', text);
-  state.history.push({ role: 'user', content: text });
+  state.history.push({ role: 'user', content: text, label: label || null });
   document.getElementById('options-panel').innerHTML = '';
 
   if (window._loadingTimeout) clearTimeout(window._loadingTimeout);
