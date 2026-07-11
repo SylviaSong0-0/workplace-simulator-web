@@ -66,7 +66,7 @@
 
     /* ========== 首页 ========== */
     #home-page {
-      padding: 50px 20px 24px;
+      padding: 80px 20px 24px;
       flex: 1;
     }
     .home-header {
@@ -810,11 +810,11 @@
   </style>
 </head>
 <body>
-<!-- v29 - 首页重构：标题→输入框→横向NPC卡片 -->
+<!-- v30 - 主页整体下移 + NPC卡片区加标题"挑战NPC" -->
 
 <div class="phone-frame">
   <div class="phone-screen">
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v29</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v30</div>
 
 <!-- ===== 首页 ===== -->
 <div id="home-page" class="page active">
@@ -828,6 +828,7 @@
       <span class="input-hint">或选择下方预设场景</span>
     </div>
   </div>
+  <div class="section-title" style="font-size:15px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:6px;">🎯 挑战NPC</div>
   <div class="npc-scroll">
     <div class="npc-card" data-scene="coworker" style="border-top-color:#FF9800">
       <div class="npc-avatar">🤡</div>
