@@ -11,9 +11,9 @@ function buildFallbackReply(sceneId) {
       observation: "注意：他正在用互联网黑话来模糊责任边界",
       statChanges: { breakdown: 0, face: 0, bp: 5 },
       suggestedOptions: [
-        { text: "（退让）好吧，我先想想。", type: "退让", desc: "先退一步" },
-        { text: "（话术反制）对焦可以，但我需要先确认责任归属，不然没法闭环。", type: "话术反制", desc: "用他的话术反将" },
-        { text: "（直接拆穿）底层逻辑就是你在甩锅，这还需要对焦？", type: "直接拆穿", desc: "当场拆穿" }
+        { label: "先退一步", text: "（退让）好吧，我先想想。", type: "退让", desc: "先退一步" },
+        { label: "话术反制", text: "（话术反制）对焦可以，但我需要先确认责任归属，不然没法闭环。", type: "话术反制", desc: "用他的话术反将" },
+        { label: "当场拆穿", text: "（直接拆穿）底层逻辑就是你在甩锅，这还需要对焦？", type: "直接拆穿", desc: "当场拆穿" }
       ]
     },
     boss: {
@@ -21,9 +21,9 @@ function buildFallbackReply(sceneId) {
       observation: "破绽：他在回避具体问题，转而攻击你的态度",
       statChanges: { breakdown: 0, face: 0, bp: 10 },
       suggestedOptions: [
-        { text: "（低头）好的老板，我回去反思。", type: "低头", desc: "暂时低头" },
-        { text: "（柔性追问）老板您说得对，态度确实很重要。那具体方案哪里需要调整，请您指导一下？", type: "柔性追问", desc: "柔性要反馈" },
-        { text: "（阴阳回怼）我反思了一下，确实是我错了——错在不该跟您讲道理。", type: "阴阳回怼", desc: "阴阳怪气" }
+        { label: "低头认错", text: "（低头）好的老板，我回去反思。", type: "低头", desc: "暂时低头" },
+        { label: "柔性追问", text: "（柔性追问）老板您说得对，态度确实很重要。那具体方案哪里需要调整，请您指导一下？", type: "柔性追问", desc: "柔性要反馈" },
+        { label: "阴阳回怼", text: "（阴阳回怼）我反思了一下，确实是我错了——错在不该跟您讲道理。", type: "阴阳回怼", desc: "阴阳怪气" }
       ]
     },
     hr: {
@@ -31,9 +31,9 @@ function buildFallbackReply(sceneId) {
       observation: "套路：用'格局'来道德绑架，让你不好意思争取利益",
       statChanges: { breakdown: 0, face: 0, bp: 5 },
       suggestedOptions: [
-        { text: "（情绪稳住）好，我冷静一下。", type: "情绪稳住", desc: "先稳住情绪" },
-        { text: "（数据说话）谢谢您帮我疏导。不过话说回来，我的KPI和贡献是客观的，这和情绪无关。", type: "数据说话", desc: "就事论事" },
-        { text: "（反讽回击）我格局已经很大了，大到能装下你们的画饼了。", type: "反讽回击", desc: "当场回怼" }
+        { label: "稳住情绪", text: "（情绪稳住）好，我冷静一下。", type: "情绪稳住", desc: "先稳住情绪" },
+        { label: "数据说话", text: "（数据说话）谢谢您帮我疏导。不过话说回来，我的KPI和贡献是客观的，这和情绪无关。", type: "数据说话", desc: "就事论事" },
+        { label: "反讽回击", text: "（反讽回击）我格局已经很大了，大到能装下你们的画饼了。", type: "反讽回击", desc: "当场回怼" }
       ]
     },
     custom: {
@@ -41,9 +41,9 @@ function buildFallbackReply(sceneId) {
       observation: "注意：对方拒绝沟通，试图用强势态度结束话题",
       statChanges: { breakdown: 0, face: 0, bp: 10 },
       suggestedOptions: [
-        { text: "（妥协）行吧，那就这样吧。", type: "妥协", desc: "选择忍让" },
-        { text: "（保持体面）好的，咱们保持沟通，找个双方都能接受的方案。", type: "保持体面", desc: "留有余地" },
-        { text: "（翻旧账）定了？我还记得上次你也是这么说的呢。", type: "翻旧账", desc: "翻旧账回击" }
+        { label: "选择妥协", text: "（妥协）行吧，那就这样吧。", type: "妥协", desc: "选择忍让" },
+        { label: "保持体面", text: "（保持体面）好的，咱们保持沟通，找个双方都能接受的方案。", type: "保持体面", desc: "留有余地" },
+        { label: "翻旧账", text: "（翻旧账）定了？我还记得上次你也是这么说的呢。", type: "翻旧账", desc: "翻旧账回击" }
       ]
     }
   };
@@ -128,7 +128,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { history, sceneId, customBackground, customPersona } = req.body || {};
+  const { history, sceneId, customBackground, customPersona, unusedLabels } = req.body || {};
   const API_KEY = process.env.DEEPSEEK_API_KEY;
 
   if (!API_KEY) {
@@ -170,11 +170,15 @@ export default async function handler(req, res) {
 
   let backgroundText = customBackground ? `\n本局游戏玩家的前情提要（必须严格基于此背景）：${customBackground}` : "";
 
+  // 上一轮玩家未采纳的选项标签（告诉 AI 之前有哪些选项被跳过，避免重复生成）
+  let unusedLabelsText = (unusedLabels && unusedLabels.length > 0) ? 
+    `\n上一轮对话中，玩家没有选择的备选策略是：${unusedLabels.join('、')}。本轮请避免生成与这些策略相同或类似的选项。` : "";
+
   const systemPrompt = `
 【角色设定】
 你是一个沉浸式文字推演游戏的 NPC 兼裁判。
 当前你的角色设定是：${persona}
-本局游戏的前情提要（必须严格基于此背景进行对话，不要说与场景无关的话）：${backgroundText}
+本局游戏的前情提要（必须严格基于此背景进行对话，不要说与场景无关的话）：${backgroundText}${unusedLabelsText}
 
 【对话要求】
 1. 你必须严格按照前情提要的场景来对话，第一句话就要把玩家代入到那个情境中。
@@ -223,10 +227,15 @@ export default async function handler(req, res) {
 - npcReply: 你的回复文本
 - observation: 裁判旁白，指出NPC话中的破绽或套路（15-30字，帮助玩家找方向）
 - statChanges: 包含 breakdown/face/bp 三个整数(0-30)
-- suggestedOptions: 包含3个选项，每个有 text、type 和 desc 字段
+- suggestedOptions: 包含3个选项，每个有 label、text、type、desc 四个字段
+  - label: 胶囊标签（2-5个字），是选项的简短标题，如"硬刚一下"、"阴阳怪气"、"以退为进"、"装傻充愣"、"数据反击"
+  - text: 选项的完整对话内容（20-50字，用户点击胶囊后实际发送的话）
+  - type: 策略类型
+  - desc: 简短策略描述
 
 【选项生成要求】
-你必须生成3个完全不同的应对策略选项，每个选项有 text、type、desc 字段。
+你必须生成3个完全不同的应对策略选项，每个选项有 label、text、type、desc 字段。
+- label: 胶囊标签（2-5个字），是选项的简短标题，像按钮上的文字。要精炼有力、有节奏感，例如"硬刚一下"、"装死到底"、"阴阳怪气"、"以退为进"、"冷静反杀"。不要用句号结尾。
 - text: 选项的完整对话内容（20-40字，要紧密结合当前对话）
 - type: 策略类型标签，不限于固定几种，要根据当前对话场景灵活命名（如"试探"、"挖坑"、"反讽"、"冷处理"、"数据反击"、"借力打力"、"装傻充愣"等）
 - desc: 简短策略描述（6-10字），说明选这个选项的预期效果
@@ -236,6 +245,7 @@ export default async function handler(req, res) {
 2. 选项内容要紧密结合当前对话的具体内容，不要生成通用模板（比如不要每次都生成"你说的有道理"这种万能回复）
 3. 每个选项的 desc 中要暗示这个选项的数值倾向，比如"可能激怒对方"、"给自己找退路"、"温柔反击"等
 4. **绝对不能和之前轮次的选项重复**：检查之前的对话，如果之前已经生成过类似的选项内容，本轮必须生成完全不同的新选项。不要偷懒复制之前的思路。
+5. 本轮生成的选项的策略方向，不能和上一轮未采纳的备用策略重复（上一轮未被选择的策略方向会在对话历史中提到）。
 
 【观察提示要求】
 - 每次NPC说话后，你都要以裁判身份给出一条简短的旁白观察
@@ -265,12 +275,22 @@ export default async function handler(req, res) {
 `;
 
   // 清洗历史记录，只保留最近 3 轮（6 条消息），控制上下文长度
-  // 重要：assistant 消息中要带上 statChanges，让 AI 能看到每轮的分数变化趋势
+  // 重要：将历史记录转换为自然语言剧本格式，让 AI 感知情绪张力和上下文脉络
   const allHistory = (history || []).map(m => {
     if (m.role === 'assistant') {
-      const payload = { npcReply: m.content };
-      if (m.statChanges) payload.statChanges = m.statChanges;
-      return { role: 'assistant', content: JSON.stringify(payload) };
+      // 自然语言化：NPC 回复 + 分数变化
+      let text = `[NPC回复]：${m.content}`;
+      if (m.statChanges) {
+        const parts = [];
+        if (m.statChanges.breakdown) parts.push(`NPC破防+${m.statChanges.breakdown}`);
+        if (m.statChanges.face) parts.push(`NPC体面+${m.statChanges.face}`);
+        if (m.statChanges.bp) parts.push(`玩家血压+${m.statChanges.bp}`);
+        if (parts.length > 0) text += `\n[本轮分数变化]：${parts.join('，')}`;
+      }
+      return { role: 'assistant', content: text };
+    }
+    if (m.role === 'user') {
+      return { role: 'user', content: `[玩家]：${m.content}` };
     }
     return m;
   });

@@ -487,6 +487,52 @@
     }
     .option-btn:hover { background: #eee; }
     .option-btn:active { background: #e0e0e0; }
+
+    /* ========== 胶囊标签选项区 ========== */
+    .capsule-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0;
+    }
+    .capsule-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 20px;
+      border: 1.5px solid #d0d0d0;
+      background: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .capsule-btn:hover { border-color: #999; background: #f9f9f9; }
+    .capsule-btn:active { transform: scale(0.96); }
+    .capsule-btn .cap-icon {
+      font-size: 15px;
+      line-height: 1;
+    }
+    .capsule-btn .cap-label {
+      font-weight: 600;
+    }
+    .capsule-btn .cap-hint {
+      font-size: 11px;
+      color: #999;
+      margin-left: 2px;
+    }
+    .capsule-btn.defend { border-color: #c8e6c9; background: #f1f8e9; }
+    .capsule-btn.defend .cap-label { color: #388E3C; }
+    .capsule-btn.diplomat { border-color: #bbdefb; background: #e3f2fd; }
+    .capsule-btn.diplomat .cap-label { color: #1565C0; }
+    .capsule-btn.strike { border-color: #ffcdd2; background: #fce4ec; }
+    .capsule-btn.strike .cap-label { color: #C62828; }
+    .capsule-btn.finisher { border-color: #fbc02d; background: #fff8e1; animation: pulse-badge 1.5s infinite; }
+    .capsule-btn.finisher .cap-label { color: #F57F17; }
+
     .option-btn .opt-header {
       display: flex;
       align-items: center;
@@ -696,11 +742,11 @@
   </style>
 </head>
 <body>
-<!-- v20 - 修复选项重复问题 -->
+<!-- v21 - 历史记录自然语言化 + 胶囊标签选项 -->
 
 <div class="phone-frame">
   <div class="phone-screen">
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v20</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v21</div>
 
 <!-- ===== 首页 ===== -->
 <div id="home-page" class="page active">
@@ -1223,7 +1269,7 @@ function setLoading(loading) {
   // if (!loading && freeInput) freeInput.focus();
 }
 
-// ========== 渲染快捷选项 ==========
+// ========== 渲染快捷选项（胶囊标签模式） ==========
 function renderOptions(options) {
   const panel = document.getElementById('options-panel');
   panel.innerHTML = '';
@@ -1233,24 +1279,83 @@ function renderOptions(options) {
 
   // 丰富的兜底选项库（用于替换重复选项）
   const fallbackPool = [
-    { text: "你说的有道理，我再想想。", type: "退让", desc: "先退一步" },
-    { text: "我理解你的意思，我们换个角度看。", type: "迂回", desc: "换个角度" },
-    { text: "你这话说得不对，我不同意。", type: "反击", desc: "正面硬刚" },
-    { text: "能具体说说吗？我想确认一下细节。", type: "追问", desc: "要求具体化" },
-    { text: "嗯，这个角度我没想过，你继续。", type: "装傻", desc: "以退为进" },
-    { text: "那按你的逻辑，上次那次又怎么解释？", type: "翻旧账", desc: "借力打力" },
-    { text: "你说得对，但我有个数据想跟你确认...", type: "数据反击", desc: "用证据说话" },
-    { text: "咱们先不讨论这个，聊聊核心问题吧。", type: "转移", desc: "拉回正题" },
-    { text: "你这么一说，我突然想起一件事...", type: "挖坑", desc: "设下陷阱" },
-    { text: "你的意思是我理解错了？那原话是什么？", type: "反讽", desc: "阴阳怪气" },
-    { text: "好，那我们就按你说的来，我记下了。", type: "冷处理", desc: "留证据" },
-    { text: "这个逻辑挺有意思的，能展开讲讲吗？", type: "试探", desc: "逼迫解释" }
+    { label: "先退一步", text: "你说得对，我再想想。", type: "退让", desc: "先退一步" },
+    { label: "换个角度", text: "我理解你的意思，我们换个角度看。", type: "迂回", desc: "换个角度" },
+    { label: "正面硬刚", text: "你这话说得不对，我不同意。", type: "反击", desc: "正面硬刚" },
+    { label: "追问细节", text: "能具体说说吗？我想确认一下细节。", type: "追问", desc: "要求具体化" },
+    { label: "装傻充愣", text: "嗯，这个角度我没想过，你继续。", type: "装傻", desc: "以退为进" },
+    { label: "借力打力", text: "那按你的逻辑，上次那次又怎么解释？", type: "翻旧账", desc: "借力打力" },
+    { label: "证据说话", text: "你说得对，但我有个数据想跟你确认...", type: "数据反击", desc: "用证据说话" },
+    { label: "拉回正题", text: "咱们先不讨论这个，聊聊核心问题吧。", type: "转移", desc: "拉回正题" },
+    { label: "设下陷阱", text: "你这么一说，我突然想起一件事...", type: "挖坑", desc: "设下陷阱" },
+    { label: "阴阳怪气", text: "你的意思是我理解错了？那原话是什么？", type: "反讽", desc: "阴阳怪气" },
+    { label: "留个证据", text: "好，那我们就按你说的来，我记下了。", type: "冷处理", desc: "留证据" },
+    { label: "步步紧逼", text: "这个逻辑挺有意思的，能展开讲讲吗？", type: "试探", desc: "逼迫解释" }
   ];
 
   // 如果选项为空，用兜底选项
   let opts = (Array.isArray(options) && options.length > 0) ? options : fallbackPool.slice(0, 3);
 
-  // 去重：检查本轮选项是否与上一轮的前8个字重复
+  // 去重：检查本轮选项的 label 是否与上一轮重复
+  if (state.lastOptionLabels && state.lastOptionLabels.length > 0) {
+    opts = opts.map((opt, idx) => {
+      const isDuplicate = state.lastOptionLabels.includes(opt.label);
+      if (isDuplicate) {
+        for (const fb of fallbackPool) {
+          const fbUsed = state.lastOptionLabels.includes(fb.label) ||
+                         opts.some((o, i) => i !== idx && o.label === fb.label);
+          if (!fbUsed) return fb;
+        }
+        return fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
+      }
+      return opt;
+    });
+  }
+
+  // 保存本轮选项标签，用于传给后端和下轮去重
+  state.lastOptionLabels = opts.map(o => o.label || o.type);
+
+  // 胶囊标签容器
+  const capsuleRow = document.createElement('div');
+  capsuleRow.className = 'capsule-options';
+
+  // 渲染为胶囊标签
+  opts.forEach((opt, idx) => {
+    const cap = document.createElement('button');
+    cap.className = 'capsule-btn';
+
+    // 根据 label 文本推断风格
+    const label = opt.label || opt.type || '';
+    const labelLower = label;
+
+    let cls = '';
+    let icon = '';
+    if (/忍|退|让|低头|妥协|稳|冷静|道歉|装傻|认怂|装乖|装死|迂回/.test(labelLower)) {
+      cls = 'defend'; icon = '🛡️';
+    } else if (/情商|柔性|圆滑|沟通|体面|客气|礼貌|温和|协商|缓和|拉回|转移/.test(labelLower)) {
+      cls = 'diplomat'; icon = '🤝';
+    } else if (/刚|怼|反击|拆穿|质问|阴阳|硬|打脸|暴击|撕破|翻旧|回怼|拆穿|反讽|反杀|紧逼/.test(labelLower)) {
+      cls = 'strike'; icon = '⚔️';
+    } else if (/试探|挖坑|借力|引导|套话|布局|陷阱|设下|追问|证据|数据/.test(labelLower)) {
+      cls = 'diplomat'; icon = '🧠';
+    } else {
+      cls = 'strike'; icon = '💬';
+    }
+
+    // 破防状态下，攻击性标签升级为终结技
+    if (isBreakState && cls === 'strike') {
+      cls = 'finisher';
+      icon = '🔥';
+      cap.classList.add('finisher');
+    }
+
+    cap.classList.add(cls);
+    cap.innerHTML = `<span class="cap-icon">${icon}</span><span class="cap-label">${label}</span>${opt.desc ? '<span class="cap-hint">' + opt.desc + '</span>' : ''}`;
+    cap.addEventListener('click', () => submitPlayerTurn(opt.text, opt.label));
+    capsuleRow.appendChild(cap);
+  });
+
+  panel.appendChild(capsuleRow);
   if (state.lastOptionTexts && state.lastOptionTexts.length > 0) {
     opts = opts.map((opt, idx) => {
       const currentPrefix = (opt.text || '').substring(0, 8);
@@ -1271,54 +1376,17 @@ function renderOptions(options) {
   }
 
   // 破防状态下，给"硬刚"类型的选项打上终结技标签
-  opts.forEach(opt => {
-    const btn = document.createElement('button');
-    btn.className = 'option-btn';
-
-    // 动态类型映射：根据 type 文本推断策略风格
-    function getTypeInfo(type) {
-      const t = type || '';
-      if (/忍|退|让|低头|妥协|稳|冷静|道歉|软化|认怂|装乖/.test(t)) {
-        return { tag: '🛡️ ' + t, cls: 'tag-defend' };
-      }
-      if (/情商|柔性|圆滑|沟通|体面|客气|礼貌|温和|协商|缓和/.test(t)) {
-        return { tag: '🤝 ' + t, cls: 'tag-diplomat' };
-      }
-      if (/刚|怼|反击|拆穿|质问|阴阳|硬|打脸|暴击|撕破/.test(t)) {
-        return { tag: '⚔️ ' + t, cls: 'tag-strike' };
-      }
-      if (/试探|挖坑|反讽|冷处理|装傻|借力|引导|套话|布局|陷阱/.test(t)) {
-        return { tag: '🧠 ' + t, cls: 'tag-diplomat' };
-      }
-      if (/数据|证据|事实|记录|逻辑|推理|分析|求证/.test(t)) {
-        return { tag: '📊 ' + t, cls: 'tag-defend' };
-      }
-      return { tag: '💬 ' + t, cls: 'tag-strike' };
-    }
-    const typeInfo = getTypeInfo(opt.type);
-
-    // 如果破防状态且选项带有攻击性，升级为终结技
-    const isFinisher = isBreakState && /刚|怼|反击|拆穿|质问|阴阳|硬|打脸|暴击|撕破/.test(opt.type || '');
-
-    btn.innerHTML = `
-      <div class="opt-header">
-        <span class="opt-tag ${isFinisher ? 'tag-finisher' : typeInfo.cls}">${isFinisher ? '🔥 终结技' : typeInfo.tag}</span>
-        ${opt.desc ? '<span class="opt-desc">' + opt.desc + '</span>' : ''}
-      </div>
-      <div class="opt-text">${opt.text}</div>
-    `;
-    btn.addEventListener('click', () => submitPlayerTurn(opt.text));
-    panel.appendChild(btn);
-  });
 }
 
 // ========== 玩家提交 ==========
-function submitPlayerTurn(text) {
+function submitPlayerTurn(text, label) {
   if (state.isLoading) return;
   if (isRequesting) return;
   // 保存当前所有选项文本，用于下一轮去重
-  const currentOptions = document.querySelectorAll('#options-panel .option-btn .opt-text');
-  state.lastOptionTexts = Array.from(currentOptions).map(el => el.textContent.trim());  // 有请求在执行中，忽略
+  const currentLabels = document.querySelectorAll('#options-panel .capsule-btn .cap-label');
+  if (currentLabels.length > 0) {
+    state.lastOptionLabels = Array.from(currentLabels).map(el => el.textContent.trim());
+  }  // 有请求在执行中，忽略
   const now = Date.now();
   if (now - lastSubmitTime < 500) return;
   lastSubmitTime = now;
@@ -1360,7 +1428,8 @@ async function requestAI() {
         sceneId: state.sceneId,
         customBackground: state.customBackground,
         customPersona: state.customPersona,
-        history: state.history
+        history: state.history,
+        unusedLabels: state.lastOptionLabels || []
       })
     });
 
