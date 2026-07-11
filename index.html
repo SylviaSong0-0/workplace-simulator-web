@@ -362,6 +362,7 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      position: relative;
     }
     .bar-row .label {
       font-size: 11px;
@@ -384,6 +385,26 @@
     .progress-fg.breakdown { background: #f44336; }
     .progress-fg.face { background: #4CAF50; }
     .progress-fg.bp { background: #9C27B0; }
+    .score-delta {
+      position: absolute;
+      right: -28px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      font-weight: 700;
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+    .score-delta.show { opacity: 1; animation: deltaPop 0.8s ease-out forwards; }
+    @keyframes deltaPop {
+      0% { opacity: 0; transform: translateY(-50%) translateX(10px); }
+      30% { opacity: 1; transform: translateY(-50%) translateX(0); }
+      100% { opacity: 0; transform: translateY(-50%) translateX(0) translateY(-16px); }
+    }
+    .score-delta.breakdown { color: #f44336; }
+    .score-delta.face { color: #4CAF50; }
+    .score-delta.bp { color: #9C27B0; }
     .player-bar {
       display: flex;
       flex-direction: column;
@@ -770,11 +791,11 @@
   </style>
 </head>
 <body>
-<!-- v24 - 观察提示嵌入NPC气泡 + 胶囊单行滚动 -->
+<!-- v25 - 评分先行：分数动画先播，NPC回复后出 -->
 
 <div class="phone-frame">
   <div class="phone-screen">
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v24</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v25</div>
 
 <!-- ===== 首页 ===== -->
 <div id="home-page" class="page active">
@@ -885,6 +906,7 @@
         <div class="bar-row">
           <span class="label">NPC破防</span>
           <div class="progress-bg"><div class="progress-fg breakdown" id="bar-breakdown" style="width:0%"></div></div>
+          <span class="score-delta breakdown" id="delta-breakdown"></span>
         </div>
       </div>
     </div>
@@ -892,10 +914,12 @@
       <div class="bar-row">
         <span class="label">我的体面</span>
         <div class="progress-bg"><div class="progress-fg face" id="bar-face" style="width:0%"></div></div>
+        <span class="score-delta face" id="delta-face"></span>
       </div>
       <div class="bar-row">
         <span class="label">我的血压</span>
         <div class="progress-bg"><div class="progress-fg bp" id="bar-bp" style="width:0%"></div></div>
+        <span class="score-delta bp" id="delta-bp"></span>
       </div>
     </div>
   </div>
@@ -1207,6 +1231,23 @@ function startBattle(sceneId, customBackground = '', sceneDataOverride = null) {
   requestAI();
 }
 
+// ========== 显示分数变化动画 ==========
+function showScoreDelta(changes) {
+  const types = ['breakdown', 'face', 'bp'];
+  types.forEach(t => {
+    const val = changes[t] || 0;
+    if (val > 0) {
+      const el = document.getElementById('delta-' + t);
+      if (el) {
+        el.textContent = '+' + val;
+        el.classList.remove('show');
+        void el.offsetWidth; // 强制重绘，让动画重新触发
+        el.classList.add('show');
+      }
+    }
+  });
+}
+
 // ========== 更新进度条 ==========
 function updateBars() {
   document.getElementById('bar-breakdown').style.width = state.npcBreakdown + '%';
@@ -1507,17 +1548,12 @@ async function requestAI() {
 
     const { npcReply, statChanges, suggestedOptions } = data;
 
-    // 添加到聊天记录（观察提示嵌入NPC气泡内）
-    if (npcReply) {
-      addMessage('assistant', npcReply, data.observation);
-      state.history.push({ role: 'assistant', content: npcReply, statChanges: statChanges || {} });
-    }
-
-    // 更新数值
+    // ===== 阶段1：评分先行 — 立即更新分数并显示动画 =====
     state.npcBreakdown = Math.min(100, state.npcBreakdown + Math.max(0, statChanges?.breakdown || 0));
     state.playerFace = Math.min(100, state.playerFace + Math.max(0, statChanges?.face || 0));
     state.playerBP = Math.min(100, state.playerBP + Math.max(0, statChanges?.bp || 0));
     updateBars();
+    showScoreDelta(statChanges || {});
 
     // 破防抖动效果
     if (statChanges?.breakdown >= 20) {
@@ -1528,7 +1564,7 @@ async function requestAI() {
       }
     }
 
-    // 检查熔断
+    // 检查熔断（评分后先判断，避免闪现NPC回复再切结果页）
     if (state.npcBreakdown >= 100 || state.playerBP >= 100) {
       setLoading(false);
       isRequesting = false;
@@ -1536,11 +1572,17 @@ async function requestAI() {
       return;
     }
 
-    // 渲染选项（空数组时 renderOptions 内部有兜底）
-    let opts = Array.isArray(suggestedOptions) ? suggestedOptions : [];
-    renderOptions(opts);
-    setLoading(false);
-    isRequesting = false;
+    // ===== 阶段2：延迟 0.5s 后显示 NPC 回复 + 选项 =====
+    setTimeout(() => {
+      if (npcReply) {
+        addMessage('assistant', npcReply, data.observation);
+        state.history.push({ role: 'assistant', content: npcReply, statChanges: statChanges || {} });
+      }
+      let opts2 = Array.isArray(suggestedOptions) ? suggestedOptions : [];
+      renderOptions(opts2);
+      setLoading(false);
+      isRequesting = false;
+    }, 500);
 
   } catch (err) {
     if (reqId !== currentRequestId) { isRequesting = false; return; }
