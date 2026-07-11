@@ -696,11 +696,11 @@
   </style>
 </head>
 <body>
-<!-- v19 - 优化选项生成 + 修复评分系统 -->
+<!-- v18 - 系统观察提示 + 选项卡片升级 + 破防状态 -->
 
 <div class="phone-frame">
   <div class="phone-screen">
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v19</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v18</div>
 
 <!-- ===== 首页 ===== -->
 <div id="home-page" class="page active">
@@ -1233,9 +1233,9 @@ function renderOptions(options) {
 
   // 如果选项为空，用兜底选项
   let opts = (Array.isArray(options) && options.length > 0) ? options : [
-    { text: "你说的有道理，我再想想。", type: "退让", desc: "先退一步" },
-    { text: "我理解你的意思，我们换个角度看。", type: "迂回", desc: "换个角度" },
-    { text: "你这话说得不对，我不同意。", type: "反击", desc: "正面硬刚" }
+    { text: "（忍让）你说的有道理，我再想想。", type: "忍让", desc: "先退一步" },
+    { text: "（高情商）我理解你的意思，我们换个角度看。", type: "高情商", desc: "换个角度" },
+    { text: "（硬刚）你这话说得不对，我不同意。", type: "幽默硬刚", desc: "正面硬刚" }
   ];
 
   // 破防状态下，给"硬刚"类型的选项打上终结技标签
@@ -1243,30 +1243,17 @@ function renderOptions(options) {
     const btn = document.createElement('button');
     btn.className = 'option-btn';
 
-    // 动态类型映射：根据 type 文本推断策略风格
-    function getTypeInfo(type) {
-      const t = type || '';
-      if (/忍|退|让|低头|妥协|稳|冷静|道歉|软化|认怂|装乖/.test(t)) {
-        return { tag: '🛡️ ' + t, cls: 'tag-defend' };
-      }
-      if (/情商|柔性|圆滑|沟通|体面|客气|礼貌|温和|协商|缓和/.test(t)) {
-        return { tag: '🤝 ' + t, cls: 'tag-diplomat' };
-      }
-      if (/刚|怼|反击|拆穿|质问|阴阳|硬|打脸|暴击|撕破/.test(t)) {
-        return { tag: '⚔️ ' + t, cls: 'tag-strike' };
-      }
-      if (/试探|挖坑|反讽|冷处理|装傻|借力|引导|套话|布局|陷阱/.test(t)) {
-        return { tag: '🧠 ' + t, cls: 'tag-diplomat' };
-      }
-      if (/数据|证据|事实|记录|逻辑|推理|分析|求证/.test(t)) {
-        return { tag: '📊 ' + t, cls: 'tag-defend' };
-      }
-      return { tag: '💬 ' + t, cls: 'tag-strike' };
-    }
-    const typeInfo = getTypeInfo(opt.type);
+    // 类型映射到标签样式
+    const typeMap = {
+      '忍让': { tag: '🛡️ 忍让', cls: 'tag-defend' },
+      '高情商': { tag: '🤝 高情商', cls: 'tag-diplomat' },
+      '幽默硬刚': { tag: '⚔️ 硬刚', cls: 'tag-strike' },
+      '硬刚': { tag: '⚔️ 硬刚', cls: 'tag-strike' }
+    };
+    const typeInfo = typeMap[opt.type] || { tag: opt.type, cls: 'tag-strike' };
 
-    // 如果破防状态且选项带有攻击性，升级为终结技
-    const isFinisher = isBreakState && /刚|怼|反击|拆穿|质问|阴阳|硬|打脸|暴击|撕破/.test(opt.type || '');
+    // 如果破防状态且是硬刚类型，升级为终结技
+    const isFinisher = isBreakState && (opt.type === '幽默硬刚' || opt.type === '硬刚');
 
     btn.innerHTML = `
       <div class="opt-header">
@@ -1353,7 +1340,7 @@ async function requestAI() {
     // 添加到聊天记录
     if (npcReply) {
       addMessage('assistant', npcReply);
-      state.history.push({ role: 'assistant', content: npcReply, statChanges: statChanges || {} });
+      state.history.push({ role: 'assistant', content: npcReply });
     }
 
     // 更新数值
