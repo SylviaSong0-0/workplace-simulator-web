@@ -71,78 +71,24 @@
     }
     .home-header {
       text-align: center;
-      margin-bottom: 32px;
+      margin-bottom: 20px;
     }
     .home-header h1 {
       font-size: 28px;
       font-weight: 700;
-      margin-bottom: 8px;
       letter-spacing: -0.5px;
     }
-    .home-header p {
-      font-size: 15px;
-      color: #888;
-    }
-    .scene-list { display: flex; flex-direction: column; gap: 16px; }
-    .scene-card {
+    /* 首页输入区 */
+    .home-input {
       background: #fff;
       border-radius: 16px;
-      padding: 20px;
+      padding: 16px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.15s;
-      border-top: 3px solid transparent;
+      margin-bottom: 24px;
     }
-    .scene-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    }
-    .scene-card .card-top {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 8px;
-    }
-    .scene-card .avatar {
-      font-size: 36px;
-      line-height: 1;
-    }
-    .scene-card .name {
-      font-size: 18px;
-      font-weight: 600;
-    }
-    .scene-card .desc {
-      font-size: 14px;
-      color: #666;
-      line-height: 1.5;
-      font-style: italic;
-    }
-    .scene-card .start-btn {
-      margin-top: 12px;
-      font-size: 14px;
-      font-weight: 600;
-      text-align: right;
-    }
-    .custom-scene {
-      margin-top: 28px;
-      background: #fff;
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      border: 1px dashed #ddd;
-    }
-    .custom-scene h3 {
-      font-size: 17px;
-      margin-bottom: 4px;
-    }
-    .custom-scene .sub {
-      font-size: 13px;
-      color: #888;
-      margin-bottom: 12px;
-    }
-    .custom-scene textarea {
+    .home-input textarea {
       width: 100%;
-      height: 100px;
+      height: 80px;
       border: 1px solid #e0e0e0;
       border-radius: 10px;
       padding: 12px;
@@ -150,23 +96,85 @@
       resize: none;
       font-family: inherit;
     }
-    .custom-scene textarea:focus {
+    .home-input textarea:focus {
       outline: none;
       border-color: #007aff;
     }
-    .custom-scene button {
-      margin-top: 12px;
-      width: 100%;
-      padding: 12px;
+    .home-input .input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .home-input .input-row button {
+      flex-shrink: 0;
+      padding: 10px 20px;
       border: none;
       border-radius: 10px;
       background: #007aff;
       color: #fff;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
       cursor: pointer;
+      white-space: nowrap;
     }
-    .custom-scene button:active { opacity: 0.85; }
+    .home-input .input-row button:active { opacity: 0.85; }
+    .home-input .input-hint {
+      font-size: 12px;
+      color: #aaa;
+      flex: 1;
+      line-height: 1.3;
+    }
+    /* 横排NPC卡片 */
+    .npc-scroll {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x proximity;
+      padding-bottom: 4px;
+    }
+    .npc-scroll::-webkit-scrollbar { display: none; }
+    .npc-card {
+      flex: 0 0 140px;
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      text-align: center;
+      scroll-snap-align: start;
+      border-top: 3px solid transparent;
+    }
+    .npc-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    .npc-card .npc-avatar {
+      font-size: 40px;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .npc-card .npc-name {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .npc-card .npc-desc {
+      font-size: 12px;
+      color: #888;
+      line-height: 1.4;
+      margin-bottom: 10px;
+      font-style: italic;
+    }
+    .npc-card .npc-btn {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 20px;
+      display: inline-block;
+    }
 
     /* ========== 准备页 ========== */
     #prep-page {
@@ -794,6 +802,7 @@
     }
     @media (max-width: 400px) {
       .home-header h1 { font-size: 24px; }
+      .npc-card { flex: 0 0 120px; }
       .status-bar { padding: 10px 12px; }
       .progress-bg { width: 80px; }
       .player-bar .progress-bg { width: 60px; }
@@ -801,49 +810,43 @@
   </style>
 </head>
 <body>
-<!-- v28 - 准备页预取：后台预加载首条AI消息，进入战场即时显示 -->
+<!-- v29 - 首页重构：标题→输入框→横向NPC卡片 -->
 
 <div class="phone-frame">
   <div class="phone-screen">
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v28</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v29</div>
 
 <!-- ===== 首页 ===== -->
 <div id="home-page" class="page active">
   <div class="home-header">
     <h1>🤯 职场吵架模拟器</h1>
-    <p>选一个场景，开始你的博弈</p>
   </div>
-  <div class="scene-list">
-    <div class="scene-card" data-scene="coworker" style="border-top-color:#FF9800">
-      <div class="card-top">
-        <span class="avatar">🤡</span>
-        <span class="name">甩锅型同事</span>
-      </div>
-      <div class="desc">"这事儿我之前跟您提过吧？"</div>
-      <div class="start-btn" style="color:#FF9800">开始推演 ➔</div>
-    </div>
-    <div class="scene-card" data-scene="boss" style="border-top-color:#E91E63">
-      <div class="card-top">
-        <span class="avatar">💼</span>
-        <span class="name">抢功型领导</span>
-      </div>
-      <div class="desc">"这个项目虽然是我主R，但你也出了力。"</div>
-      <div class="start-btn" style="color:#E91E63">开始推演 ➔</div>
-    </div>
-    <div class="scene-card" data-scene="hr" style="border-top-color:#9C27B0">
-      <div class="card-top">
-        <span class="avatar">🐍</span>
-        <span class="name">画饼/和稀泥 HR</span>
-      </div>
-      <div class="desc">"咱们多从'拥抱变化'的角度去想。"</div>
-      <div class="start-btn" style="color:#9C27B0">开始推演 ➔</div>
+  <div class="home-input">
+    <textarea id="custom-text" placeholder="输入你没吵赢的职场故事，AI 陪你重开一局…"></textarea>
+    <div class="input-row">
+      <button id="start-custom">自定义开局 ➔</button>
+      <span class="input-hint">或选择下方预设场景</span>
     </div>
   </div>
-  <div class="custom-scene">
-    <h3>🎭 自定义场景</h3>
-    <p class="sub">输入你没吵赢的职场故事，AI 陪你重开一局</p>
-    <textarea id="custom-text" placeholder="例如：今天我做了一天的PPT，结果老板连看都没看就让我重做，还说我没有闭环思维..."></textarea>
-    <button id="start-custom">自定义开局 ➔</button>
+  <div class="npc-scroll">
+    <div class="npc-card" data-scene="coworker" style="border-top-color:#FF9800">
+      <div class="npc-avatar">🤡</div>
+      <div class="npc-name">甩锅型同事</div>
+      <div class="npc-desc">"这事儿我之前跟您提过吧？"</div>
+      <span class="npc-btn" style="color:#FF9800;background:#FFF3E0">推演 ➔</span>
+    </div>
+    <div class="npc-card" data-scene="boss" style="border-top-color:#E91E63">
+      <div class="npc-avatar">💼</div>
+      <div class="npc-name">抢功型领导</div>
+      <div class="npc-desc">"这个项目虽然是我主R，但你也出了力。"</div>
+      <span class="npc-btn" style="color:#E91E63;background:#FCE4EC">推演 ➔</span>
+    </div>
+    <div class="npc-card" data-scene="hr" style="border-top-color:#9C27B0">
+      <div class="npc-avatar">🐍</div>
+      <div class="npc-name">画饼和稀泥 HR</div>
+      <div class="npc-desc">"咱们多从'拥抱变化'的角度去想。"</div>
+      <span class="npc-btn" style="color:#9C27B0;background:#F3E5F5">推演 ➔</span>
+    </div>
   </div>
 </div>
 
@@ -1096,7 +1099,7 @@ function prefetchFirstMessage(sceneId, customBackground, customPersona) {
 }
 
 // ========== 首页事件 ==========
-document.querySelectorAll('.scene-card').forEach(card => {
+document.querySelectorAll('.npc-card').forEach(card => {
   card.addEventListener('click', () => {
     const sceneId = card.dataset.scene;
     showPrepPage(sceneId);
