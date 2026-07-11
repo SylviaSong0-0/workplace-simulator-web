@@ -94,7 +94,7 @@ async function callDeepSeek(API_KEY, messages) {
         messages: messages,
         response_format: { type: 'json_object' },
         max_tokens: 1200,
-        temperature: 0.6
+        temperature: 0.85
       }),
       signal: controller.signal
     });
@@ -235,6 +235,7 @@ export default async function handler(req, res) {
 1. 三个选项必须是三种完全不同的策略思路，不能只是语气不同
 2. 选项内容要紧密结合当前对话的具体内容，不要生成通用模板（比如不要每次都生成"你说的有道理"这种万能回复）
 3. 每个选项的 desc 中要暗示这个选项的数值倾向，比如"可能激怒对方"、"给自己找退路"、"温柔反击"等
+4. **绝对不能和之前轮次的选项重复**：检查之前的对话，如果之前已经生成过类似的选项内容，本轮必须生成完全不同的新选项。不要偷懒复制之前的思路。
 
 【观察提示要求】
 - 每次NPC说话后，你都要以裁判身份给出一条简短的旁白观察

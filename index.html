@@ -696,11 +696,11 @@
   </style>
 </head>
 <body>
-<!-- v19 - 优化选项生成 + 修复评分系统 -->
+<!-- v20 - 修复选项重复问题 -->
 
 <div class="phone-frame">
   <div class="phone-screen">
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v19</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#666;z-index:9999;">v20</div>
 
 <!-- ===== 首页 ===== -->
 <div id="home-page" class="page active">
@@ -1231,12 +1231,44 @@ function renderOptions(options) {
   // 判断是否处于破防状态
   const isBreakState = state.npcBreakdown >= 80;
 
-  // 如果选项为空，用兜底选项
-  let opts = (Array.isArray(options) && options.length > 0) ? options : [
+  // 丰富的兜底选项库（用于替换重复选项）
+  const fallbackPool = [
     { text: "你说的有道理，我再想想。", type: "退让", desc: "先退一步" },
     { text: "我理解你的意思，我们换个角度看。", type: "迂回", desc: "换个角度" },
-    { text: "你这话说得不对，我不同意。", type: "反击", desc: "正面硬刚" }
+    { text: "你这话说得不对，我不同意。", type: "反击", desc: "正面硬刚" },
+    { text: "能具体说说吗？我想确认一下细节。", type: "追问", desc: "要求具体化" },
+    { text: "嗯，这个角度我没想过，你继续。", type: "装傻", desc: "以退为进" },
+    { text: "那按你的逻辑，上次那次又怎么解释？", type: "翻旧账", desc: "借力打力" },
+    { text: "你说得对，但我有个数据想跟你确认...", type: "数据反击", desc: "用证据说话" },
+    { text: "咱们先不讨论这个，聊聊核心问题吧。", type: "转移", desc: "拉回正题" },
+    { text: "你这么一说，我突然想起一件事...", type: "挖坑", desc: "设下陷阱" },
+    { text: "你的意思是我理解错了？那原话是什么？", type: "反讽", desc: "阴阳怪气" },
+    { text: "好，那我们就按你说的来，我记下了。", type: "冷处理", desc: "留证据" },
+    { text: "这个逻辑挺有意思的，能展开讲讲吗？", type: "试探", desc: "逼迫解释" }
   ];
+
+  // 如果选项为空，用兜底选项
+  let opts = (Array.isArray(options) && options.length > 0) ? options : fallbackPool.slice(0, 3);
+
+  // 去重：检查本轮选项是否与上一轮的前8个字重复
+  if (state.lastOptionTexts && state.lastOptionTexts.length > 0) {
+    opts = opts.map((opt, idx) => {
+      const currentPrefix = (opt.text || '').substring(0, 8);
+      const isDuplicate = state.lastOptionTexts.some(prev => prev.substring(0, 8) === currentPrefix);
+      if (isDuplicate) {
+        // 从兜底池中找一个不重复的替换
+        for (const fb of fallbackPool) {
+          const fbPrefix = fb.text.substring(0, 8);
+          const fbUsed = state.lastOptionTexts.some(p => p.substring(0, 8) === fbPrefix) ||
+                         opts.some((o, i) => i !== idx && (o.text || '').substring(0, 8) === fbPrefix);
+          if (!fbUsed) return fb;
+        }
+        // 如果兜底池也重复了，就随机选一个
+        return fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
+      }
+      return opt;
+    });
+  }
 
   // 破防状态下，给"硬刚"类型的选项打上终结技标签
   opts.forEach(opt => {
@@ -1283,7 +1315,10 @@ function renderOptions(options) {
 // ========== 玩家提交 ==========
 function submitPlayerTurn(text) {
   if (state.isLoading) return;
-  if (isRequesting) return;  // 有请求在执行中，忽略
+  if (isRequesting) return;
+  // 保存当前所有选项文本，用于下一轮去重
+  const currentOptions = document.querySelectorAll('#options-panel .option-btn .opt-text');
+  state.lastOptionTexts = Array.from(currentOptions).map(el => el.textContent.trim());  // 有请求在执行中，忽略
   const now = Date.now();
   if (now - lastSubmitTime < 500) return;
   lastSubmitTime = now;
