@@ -308,18 +308,13 @@
       flex: 1;
       line-height: 1.3;
     }
-    /* 横排NPC卡片 */
+    /* 双列NPC卡片 */
     .npc-scroll {
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 12px;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scroll-snap-type: x proximity;
-      padding-bottom: 4px;
     }
-    .npc-scroll::-webkit-scrollbar { display: none; }
     .npc-card {
-      flex: 0 0 140px;
       background: #fff;
       border-radius: 16px;
       padding: 16px 12px;
@@ -327,7 +322,6 @@
       cursor: pointer;
       transition: transform 0.15s, box-shadow 0.15s;
       text-align: center;
-      scroll-snap-align: start;
       border-top: 3px solid transparent;
     }
     .npc-card:hover {
@@ -987,7 +981,7 @@
     }
     @media (max-width: 400px) {
       .home-header h1 { font-size: 24px; }
-      .npc-card { flex: 0 0 120px; }
+      
       .status-bar { padding: 10px 12px; }
       .progress-bg { width: 80px; }
       .player-bar .progress-bg { width: 60px; }
@@ -995,7 +989,7 @@
   </style>
 </head>
 <body>
-<!-- v34 - 背景添加弥散光效果 -->
+<!-- v35 - NPC卡片改为双列网格布局，去掉滑动 -->
 
 <div class="desktop-layout">
   <div class="left-panel">
@@ -1024,7 +1018,7 @@
   </div>
   <div class="phone-frame">
   <div class="phone-screen">
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#999;z-index:9999;">v34</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#999;z-index:9999;">v35</div>
 
 <!-- ===== 首页 ===== -->
 <div id="home-page" class="page active">
