@@ -89,60 +89,53 @@
       line-height: 1.6;
       margin-bottom: 36px;
     }
-    .left-panel .lp-features {
+    .left-panel .lp-info {
       display: flex;
       flex-direction: column;
-      gap: 20px;
-      margin-bottom: 36px;
+      gap: 28px;
     }
-    .left-panel .lp-feat {
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-    }
-    .left-panel .lp-feat .lp-feat-icon {
-      font-size: 28px;
-      flex-shrink: 0;
-      line-height: 1;
-    }
-    .left-panel .lp-feat h4 {
-      font-size: 15px;
+    .left-panel .lp-section h3 {
+      font-size: 16px;
       font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .left-panel .lp-section h3 .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .left-panel .lp-section p {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.8;
+      padding-left: 14px;
+    }
+    .left-panel .lp-section .rule-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding-left: 14px;
+    }
+    .left-panel .lp-section .rule-item {
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #555;
+      line-height: 1.5;
+      border: 1px solid #eee;
+    }
+    .left-panel .lp-section .rule-item strong {
+      display: block;
+      font-size: 13px;
       color: #333;
       margin-bottom: 2px;
     }
-    .left-panel .lp-feat p {
-      font-size: 13px;
-      color: #999;
-      line-height: 1.5;
-    }
-    .left-panel .lp-actions {
-      display: flex;
-      gap: 12px;
-    }
-    .lp-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 12px 24px;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .lp-btn.primary {
-      background: #007aff;
-      color: #fff;
-      border: none;
-    }
-    .lp-btn.primary:hover { background: #0066d6; }
-    .lp-btn.secondary {
-      background: #fff;
-      color: #333;
-      border: 1.5px solid #e0e0e0;
-    }
-    .lp-btn.secondary:hover { border-color: #bbb; }
 
     /* ========== 规则弹窗 ========== */
     .rules-overlay {
@@ -976,44 +969,36 @@
   </style>
 </head>
 <body>
-<!-- v32 - 桌面端左右布局：左侧产品说明 + 右侧手机模拟器 + 规则弹窗 -->
+<!-- v33 - 左侧面板重构：去掉按钮，三栏详细说明产品/玩法/规则 -->
 
 <div class="desktop-layout">
   <div class="left-panel">
     <div class="lp-logo">WORKPLACE SIMULATOR</div>
     <h1>职场吵架模拟器</h1>
-    <p class="lp-subtitle">吵不赢的架，在这重开一局。<br>选择策略、怼到对方破防，看看你能多体面地赢。</p>
-    <div class="lp-features">
-      <div class="lp-feat">
-        <span class="lp-feat-icon">🤖</span>
-        <div>
-          <h4>AI 实时对线</h4>
-          <p>DeepSeek 驱动，每个 NPC 都有独立人设，怼到你爽</p>
+    <p class="lp-subtitle">吵不赢的架，在这重开一局。和 AI 扮演的职场对手对线，看看你能多体面地赢。</p>
+    <div class="lp-info">
+      <div class="lp-section">
+        <h3><span class="dot" style="background:#007aff;"></span>这是什么东西</h3>
+        <p>一个基于 AI 的职场推演游戏。你面对的不是选择题，而是由 DeepSeek 驱动的真实 NPC——甩锅的同事、抢功的领导、画饼的 HR。他们有自己的立场和话术，会咄咄逼人、会阴阳怪气、会恼羞成怒。你输入的每一句话，AI 都会实时回应，并评估你的策略效果。</p>
+      </div>
+      <div class="lp-section">
+        <h3><span class="dot" style="background:#FF9800;"></span>怎么玩</h3>
+        <p>选定场景后，NPC 会率先发难。每轮对话你从三个策略标签中选择一个（如「硬刚」「阴阳怪气」「以退为进」），或者自己输入想说的话。AI 会根据你的策略类型打分，三根数值条实时变化。12 回合内，谁先到 100 分谁赢。</p>
+      </div>
+      <div class="lp-section">
+        <h3><span class="dot" style="background:#E91E63;"></span>规则速览</h3>
+        <div class="rule-grid">
+          <div class="rule-item"><strong>🔴 NPC 破防值</strong>怼得越狠涨越多，先到 100 → 你赢</div>
+          <div class="rule-item"><strong>🟣 玩家血压值</strong>忍气吞声、被 PUA 时涨，先到 100 → 你输</div>
+          <div class="rule-item"><strong>🟢 玩家体面值</strong>风度越好涨越多，不影响胜负，只影响结局质量</div>
+          <div class="rule-item"><strong>🏆 六种结局</strong>赢或输 × 体面高/中/低，吵赢也要吵得漂亮</div>
         </div>
       </div>
-      <div class="lp-feat">
-        <span class="lp-feat-icon">🎯</span>
-        <div>
-          <h4>策略评分系统</h4>
-          <p>六种策略类型，AI 按标签打分，不只是看文字</p>
-        </div>
-      </div>
-      <div class="lp-feat">
-        <span class="lp-feat-icon">🏆</span>
-        <div>
-          <h4>六种结局</h4>
-          <p>赢/输 × 体面高/中/低，吵赢也要吵得漂亮</p>
-        </div>
-      </div>
-    </div>
-    <div class="lp-actions">
-      <button class="lp-btn primary" onclick="document.querySelector('.phone-screen').scrollIntoView({behavior:'smooth'}); document.querySelector('.home-input textarea').focus();">🚀 开始推演</button>
-      <button class="lp-btn secondary" id="show-rules">📖 游戏规则</button>
     </div>
   </div>
   <div class="phone-frame">
   <div class="phone-screen">
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#999;z-index:9999;">v32</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#999;z-index:9999;">v33</div>
 
 <!-- ===== 首页 ===== -->
 <div id="home-page" class="page active">
